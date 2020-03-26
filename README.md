@@ -1,51 +1,12 @@
 # A MongoDB-based store for Quartz.
 
-This is a MongoDB-backed job store for the [Quartz scheduler](http://quartz-scheduler.org/).
+This is a Cassandra and MongoDB-backed job store for the [Quartz scheduler](http://quartz-scheduler.org/).
 
 ## Maven Artifacts
 
-Artifacts are released to [Bintray](https://bintray.com/michaelklishin/maven/).
+This is a fork from: https://github.com/michaelklishin/quartz-mongodb.git
+Inovaworks have not published this artifact to any repository. Please build it first:
 
-If you are using Maven, add the following repository
-definition to your `pom.xml`:
-
-``` xml
-<repositories>
-    <repository>
-        <id>michaelklishin</id>
-        <url>https://dl.bintray.com/michaelklishin/maven/</url>
-    </repository>
-</repositories>
-```
-
-If you are using Gradle, add the following to your `build.gradle`:
-
-``` groovy
-repositories {
-    maven {
-        url "https://dl.bintray.com/michaelklishin/maven/"
-    }
-}
-```
-
-
-### The Most Recent Release
-
-With Maven:
-
-``` xml
-<dependency>
-    <groupId>com.novemberain</groupId>
-    <artifactId>quartz-mongodb</artifactId>
-    <version>2.1.0</version>
-</dependency>
-```
-
-With Gradle:
-
-``` groovy
-compile "com.novemberain:quartz-mongodb:2.1.0"
-```
 
 
 ## Usage
@@ -64,6 +25,17 @@ via a property file, `quartz.properties`:
     # Will be used to create collections like mycol_jobs, mycol_triggers, mycol_calendars, mycol_locks
     org.quartz.jobStore.collectionPrefix=mycol
     # thread count setting is ignored by the MongoDB store but Quartz requries it
+    org.quartz.threadPool.threadCount=1
+    
+    # Use the Cassandra store
+    org.quartz.jobStore.class=com.inovaworkscc.quartz.cassandra.CassandraJobStore
+    # Cassandra URI (optional if 'org.quartz.jobStore.addresses' is set)
+    org.quartz.jobStore.cassandraUri=localhost:9042
+    # comma separated list of cassandra hosts/replica set seeds (optional if 'org.quartz.jobStore.cassandraUri' is set)
+    org.quartz.jobStore.addresses=host1,host2
+    # keyspace name
+    org.quartz.jobStore.dbName=quartz_scheduler
+    # thread count setting is ignored by the Cassandra store but Quartz requries it
     org.quartz.threadPool.threadCount=1
 
 
@@ -86,10 +58,12 @@ implementation.
 To shut down the JVM (which is the default), add the following key to `quartz.properties`
 
     org.quartz.jobStore.checkInErrorHandler.class=com.novemberain.quartz.mongodb.cluster.KamikazeErrorHandler
+    org.quartz.jobStore.checkInErrorHandler.class=com.inovaworkscc.quartz.cassandra.cluster.KamikazeErrorHandler
 
 to ignore the failure:
 
     org.quartz.jobStore.checkInErrorHandler.class=com.novemberain.quartz.mongodb.cluster.NoOpErrorHandler
+    org.quartz.jobStore.checkInErrorHandler.class=com.inovaworkscc.quartz.cassandra.cluster.NoOpErrorHandler
 
 
 
@@ -100,6 +74,7 @@ If you use [Quartzite](http://clojurequartz.info) or want your job classes to be
 to Clojure code, use:
 
     org.quartz.jobStore.class=com.novemberain.quartz.mongodb.DynamicMongoDBJobStore
+    org.quartz.jobStore.class=com.inovaworkscc.quartz.cassandra.DynamicCAssandraJobStore
 
 (this assumes Clojure jar is on classpath).
 
@@ -107,7 +82,7 @@ to Clojure code, use:
 By default you are allowed to pass any `java.io.Serializable` objects inside `JobDataMap`.
 It will be serialized and stored as a `base64` string.
 
-If your `JobDataMap` only contains simple types, it may be stored directly inside MongoDB to save some performance.
+If your `JobDataMap` only contains simple types, it may be stored directly inside MongoDB or Cassandra to save some performance.
 
     org.quartz.jobStore.jobDataAsBase64=false
 
