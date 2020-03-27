@@ -12,6 +12,7 @@ import com.inovaworkscc.quartz.cassandra.cluster.RecoveryTriggerFactory;
 import com.inovaworkscc.quartz.cassandra.cluster.CheckinTask;
 import com.inovaworkscc.quartz.cassandra.cluster.KamikazeErrorHandler;
 import com.inovaworkscc.quartz.cassandra.dao.PausedTriggerGroupsDao;
+import com.inovaworkscc.quartz.cassandra.db.CassandraConnectionManager;
 import com.inovaworkscc.quartz.cassandra.trigger.MisfireHandler;
 import com.inovaworkscc.quartz.cassandra.trigger.TriggerConverter;
 import com.inovaworkscc.quartz.cassandra.util.ExpiryCalculator;
@@ -49,6 +50,11 @@ public class CassandraStoreAssembler {
                       SchedulerSignaler signaler, Properties quartzProps)
         throws SchedulerConfigException, ClassNotFoundException,
         IllegalAccessException, InstantiationException {
+        
+        CassandraConnectionManager.setProperties(
+                jobStore.getContactPoint(), 
+                jobStore.getPort(), 
+                jobStore.getDbName());
         
         JobDataConverter jobDataConverter = new JobDataConverter(jobStore.isJobDataAsBase64());
 

@@ -13,6 +13,9 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class CalendarDao {
 
@@ -90,21 +93,32 @@ public class CalendarDao {
 
     public Calendar retrieveCalendar(String calName) throws JobPersistenceException {
         
-        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(CALENDARS_GET));
-        boundStatement.bind(calName);
+        if(calName == null)
+            return null;
         
-        ResultSet rs = CassandraConnectionManager.getInstance().execute(boundStatement); 
-        
-        Row r = rs.one();
-        
-        if (r != null){
+        try {
+            BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(CALENDARS_GET));
+            boundStatement.bind(calName);
             
-            ByteBuffer bb = r.getBytes("serializedObject");
+            ResultSetFuture rs = CassandraConnectionManager.getInstance().executeAsync(boundStatement);
+            Calendar calendar;
             
-            Calendar calendar = SerialUtils.deserialize(bb.array(), Calendar.class);
+            Row r = rs.get().one();
             
-            return calendar;
+            if (r != null){
+                
+                ByteBuffer bb = r.getBytes("serializedObject");
+                
+                calendar = SerialUtils.deserialize(bb.array(), Calendar.class);
+                
+                return calendar;
+            }
+        } catch (InterruptedException ex) {
+            throw new JobPersistenceException(ex.getMessage(), ex);
+        } catch (ExecutionException ex) {
+            throw new JobPersistenceException(ex.getMessage(), ex);
         }
+        
         
         return null;
     }

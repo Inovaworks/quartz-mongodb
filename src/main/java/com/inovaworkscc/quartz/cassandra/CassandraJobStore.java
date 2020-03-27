@@ -1,6 +1,7 @@
 package com.inovaworkscc.quartz.cassandra;
 
 import com.inovaworkscc.quartz.cassandra.db.CassandraConnectionManager;
+import com.inovaworkscc.quartz.cassandra.db.CassandraDatabaseException;
 import org.quartz.*;
 import org.quartz.Calendar;
 import org.quartz.Trigger.CompletedExecutionInstruction;
@@ -21,6 +22,9 @@ public class CassandraJobStore implements JobStore {
     private CassandraStoreAssembler assembler = new CassandraStoreAssembler();
 
     String authDbName;
+    String dbName;
+    String contactPoint;
+    String port;
     String schedulerName;
     String instanceId;
     long misfireThreshold = 5000;
@@ -64,6 +68,8 @@ public class CassandraJobStore implements JobStore {
             }
             assembler.checkinExecutor.start();
         }
+        
+        prepareInstance();
     }
 
     private Properties loadProperties(ClassLoadHelper loadHelper) {
@@ -463,7 +469,56 @@ public class CassandraJobStore implements JobStore {
     public List<Row> getLocksCollection() {
         return assembler.locksDao.getCollection();
     }*/
+    
+    public String getDbName() {
+        return dbName;
+    }
 
+    public void setDbName(String dbName) {
+        this.dbName = dbName;
+    }
+
+    public String getContactPoint() {
+        return contactPoint;
+    }
+
+    public void setContactPoint(String contactPoint) {
+        this.contactPoint = contactPoint;
+    }
+
+    public String getPort() {
+        return port;
+    }
+
+    public void setPort(String port) {
+        this.port = port;
+    }
+
+    /**
+     * Prepares the tables for the new instance: 
+     * locks is truncated
+     *
+     * @throws SchedulerConfigException if an error occurred communicating with the MongoDB server.
+     */
+    private void prepareInstance() throws SchedulerConfigException {
+        try {
+            /*
+             * Indexes are to be declared as group then name.  This is important as the quartz API allows
+             * for the searching of jobs and triggers using a group matcher.  To be able to use the compound
+             * index using group alone (as the API allows), group must be the first key in that index.
+             *
+             * To be consistent, all such indexes are ensured in the order group then name.  The previous
+             * indexes are removed after we have "ensured" the new ones.
+             */
+
+
+            assembler.locksDao.prepareInstance(isClustered());
+
+        } catch (CassandraDatabaseException e) {
+            throw new SchedulerConfigException("Error while initializing the indexes", e);
+        }
+    }
+    
     public void setMisfireThreshold(long misfireThreshold) {
         this.misfireThreshold = misfireThreshold;
     }

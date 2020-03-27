@@ -8,11 +8,12 @@ This is a fork from: https://github.com/michaelklishin/quartz-mongodb.git
 Inovaworks have not published this artifact to any repository. Please build it first:
 
 
-
 ## Usage
 
 Like most things in Quartz, this job store is configured
 via a property file, `quartz.properties`:
+
+	# Using MongoDB
 
     # Use the MongoDB store
     org.quartz.jobStore.class=com.novemberain.quartz.mongodb.MongoDBJobStore
@@ -27,16 +28,22 @@ via a property file, `quartz.properties`:
     # thread count setting is ignored by the MongoDB store but Quartz requries it
     org.quartz.threadPool.threadCount=1
     
+
+    # Using Cassandra
+    
     # Use the Cassandra store
     org.quartz.jobStore.class=com.inovaworkscc.quartz.cassandra.CassandraJobStore
-    # Cassandra URI (optional if 'org.quartz.jobStore.addresses' is set)
-    org.quartz.jobStore.cassandraUri=localhost:9042
-    # comma separated list of cassandra hosts/replica set seeds (optional if 'org.quartz.jobStore.cassandraUri' is set)
-    org.quartz.jobStore.addresses=host1,host2
-    # keyspace name
-    org.quartz.jobStore.dbName=quartz_scheduler
+    # Cassandra Contact Point
+    org.quartz.jobStore.contactPoint=localhost
+    # Cassandra Port
+    org.quartz.jobStore.port=9042
+    # Keyspace name
+    org.quartz.jobStore.dbName=quartz_nosql
     # thread count setting is ignored by the Cassandra store but Quartz requries it
     org.quartz.threadPool.threadCount=1
+    
+The DDL is available at
+    src/main/resources/cassandra_ddl 
 
 
 

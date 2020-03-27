@@ -40,7 +40,7 @@ public class TriggerDao implements GroupedDao{
 
     private static final Logger log = LoggerFactory.getLogger(TriggerDao.class);
 
-    public static final String TABLE_NAME_TRIGGERS = "jobs";
+    public static final String TABLE_NAME_TRIGGERS = "triggers";
 
     public static final String TRIGGERS_GET_ALL = CassandraConnectionManager.registerStatement ("TRIGGERS_GET_ALL", 
             "SELECT * FROM " + TABLE_NAME_TRIGGERS
@@ -367,7 +367,7 @@ public class TriggerDao implements GroupedDao{
             throws ObjectAlreadyExistsException, JobPersistenceException {
 
         OperableTrigger existingTrigger = this.getTrigger(offendingTrigger.getKey());
-        if (existingTrigger != null) {
+        if (existingTrigger == null) {
           
             BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(TRIGGERS_INSERT));
             boundStatement.bind(

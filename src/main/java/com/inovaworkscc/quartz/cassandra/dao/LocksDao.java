@@ -22,9 +22,9 @@ import static com.inovaworkscc.quartz.cassandra.Constants.LOCK_INSTANCE_ID;
 import static com.inovaworkscc.quartz.cassandra.Constants.LOCK_TIME;
 import com.inovaworkscc.quartz.cassandra.util.Clock;
 import static com.inovaworkscc.quartz.cassandra.util.Keys.*;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import org.quartz.utils.Key;
 
 public class LocksDao implements GroupedDao{
 
@@ -32,51 +32,31 @@ public class LocksDao implements GroupedDao{
 
     public static final String TABLE_NAME_LOCKS = "locks";
     
-    public static final String LOCKS_GET_ALL = CassandraConnectionManager.registerStatement ("JOBS_GET_ALL", 
+    public static final String LOCKS_GET_ALL = CassandraConnectionManager.registerStatement ("LOCKS_GET_ALL", 
             "SELECT * FROM " + TABLE_NAME_LOCKS
+    );
+    
+    public static final String LOCKS_GET_BY_KEY_LOCK_TYPE = CassandraConnectionManager.registerStatement("LOCKS_GET_BY_KEY_LOCK_TYPE",
+            "SELECT * FROM " + TABLE_NAME_LOCKS + " WHERE "
+                    + KEY_NAME + " = ? AND "
+                    + KEY_GROUP + " = ? AND"
+                    + LOCK_TYPE + " = ?"
     );
     
     public static final String LOCKS_GET_BY_KEY = CassandraConnectionManager.registerStatement("LOCKS_GET_BY_KEY",
             "SELECT * FROM " + TABLE_NAME_LOCKS + " WHERE "
                     + KEY_NAME + " = ? AND "
-                    + KEY_GROUP + " = ? AND "
-                    + LOCK_TYPE + " = ?"
+                    + KEY_GROUP + " = ?"
     );
     
     public static final String LOCKS_GET_BY_INSTANCE_ID = CassandraConnectionManager.registerStatement("LOCKS_GET_BY_INSTANCE_ID",
-            "SELECT * FROM " + TABLE_NAME_LOCKS + " WHERE "
-                    + LOCK_INSTANCE_ID + " = ? AND "
-                    + LOCK_TYPE + " = ? "
-                    + "ALLOW FILTERING"
-    );
-    
-    public static final String LOCKS_GET_BY_KEY_TYPE_INSTANCE_ID = CassandraConnectionManager.registerStatement("LOCKS_GET_BY_KEY_TYPE_INSTANCE_ID",
-            "SELECT * FROM " + TABLE_NAME_LOCKS + " WHERE "
-                    + KEY_NAME + " = ? AND "
-                    + KEY_GROUP + " = ? AND "
-                    + LOCK_TYPE + " = ? AND"
+            "SELECT " + KEY_NAME + "," + KEY_GROUP + "," + LOCK_TYPE + " FROM " + TABLE_NAME_LOCKS + " WHERE "
                     + LOCK_INSTANCE_ID + " = ? "
-                    + "ALLOW FILTERING"
-    );
-    
-    public static final String LOCKS_GET_BY_KEY_INSTANCE_ID = CassandraConnectionManager.registerStatement("LOCKS_GET_BY_KEY_INSTANCE_ID",
-            "SELECT * FROM " + TABLE_NAME_LOCKS + " WHERE "
-                    + KEY_NAME + " = ? AND "
-                    + KEY_GROUP + " = ? AND "
-                    + LOCK_INSTANCE_ID + " = ? "
-                    + "ALLOW FILTERING"
-    );
-    
-    public static final String LOCKS_GET_BY_KEY_TIME = CassandraConnectionManager.registerStatement("LOCKS_GET_BY_KEY_TIME",
-            "SELECT * FROM " + TABLE_NAME_LOCKS + " WHERE "
-                    + KEY_NAME + " = ? AND "
-                    + KEY_GROUP + " = ? AND "
-                    + LOCK_TYPE + " = ? AND"
-                    + LOCK_TIME + " = ?"
     );
     
     public static final String LOCKS_INSERT = CassandraConnectionManager.registerStatement("LOCKS_INSERT",
-            "INSERT INTO " + TABLE_NAME_LOCKS + " (" + LOCK_TYPE + "," + KEY_GROUP + "," + KEY_NAME + "," + LOCK_INSTANCE_ID + "," + LOCK_TIME + ")" + "VALUES ("
+            "INSERT INTO " + TABLE_NAME_LOCKS + " (" + KEY_NAME + "," + KEY_GROUP + "," + KEY_GROUP + "_index" + "," + LOCK_TYPE + "," + LOCK_INSTANCE_ID + "," + LOCK_TIME + ")" + " VALUES ("
+            + "?, "
             + "?, "
             + "?, "
             + "?, "
@@ -84,20 +64,22 @@ public class LocksDao implements GroupedDao{
             + "?)"
     );
     
-    public static final String LOCKS_DELETE = CassandraConnectionManager.registerStatement("LOCKS_DELETE",
-        "DELETE FROM " + TABLE_NAME_LOCKS + " WHERE "
-            + LOCK_TYPE + " = ? AND "
-            + KEY_GROUP + " = ? AND "
-            + KEY_NAME + " = ? AND "
-            + LOCK_TIME + " = ? AND "
-            + LOCK_INSTANCE_ID + " = ?"
+    public static final String LOCKS_UPDATE = CassandraConnectionManager.registerStatement("LOCKS_UPDATE",
+            "UPDATE " + TABLE_NAME_LOCKS + " SET " 
+                + LOCK_INSTANCE_ID + " = ? ,"
+                + LOCK_TIME + " = ? "
+                + "WHERE "
+                + KEY_NAME + " = ? AND "
+                + KEY_GROUP + " = ? AND "
+                + LOCK_TYPE + " = ? "
+                + "IF EXISTS"
     );
     
-    public static final String LOCKS_DELETE_KEY = CassandraConnectionManager.registerStatement("LOCKS_DELETE_KEY",
+    public static final String LOCKS_DELETE = CassandraConnectionManager.registerStatement("LOCKS_DELETE",
         "DELETE FROM " + TABLE_NAME_LOCKS + " WHERE "
-            + LOCK_TYPE + " = ? AND "
+            + KEY_NAME + " = ? AND "
             + KEY_GROUP + " = ? AND "
-            + KEY_NAME + " = ?"
+            + LOCK_TYPE + " = ? "
     );
     
     public static final String LOCKS_GET_DISTINCT_KEY_GROUP = CassandraConnectionManager.registerStatement("LOCKS_GET_DISTINCT_KEY_GROUP",
@@ -121,6 +103,24 @@ public class LocksDao implements GroupedDao{
         this.clock = clock;
         this.instanceId = instanceId;
     }
+    
+    /**
+     * remove all locks for this instance on startup
+     * @param clustered 
+     */
+    public void prepareInstance(boolean clustered) {
+
+        //TODO check what to do when is clustered
+        
+        ResultSetFuture rs = findOwnLocks(); 
+
+        rs.getUninterruptibly().forEach(row -> {
+            
+            if(LockType.t.name().equals(row.getString(LOCK_TYPE))){
+                remove(row);
+            }
+        });  
+    }
 
     public List<Row> getCollection() {
 
@@ -132,69 +132,107 @@ public class LocksDao implements GroupedDao{
 
     public Row findJobLock(JobKey job) {
                
-        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_GET_BY_KEY));
+        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_GET_BY_KEY_LOCK_TYPE));
         boundStatement.bind(job.getName(), job.getGroup(), LockType.j.name());
-        ResultSet rs = CassandraConnectionManager.getInstance().execute(boundStatement); 
-
+        ResultSet rs = CassandraConnectionManager.getInstance().execute(boundStatement);
+        
         return rs.one();  
     }
 
     public Row findTriggerLock(TriggerKey trigger) {
                 
-        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_GET_BY_KEY));
+        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_GET_BY_KEY_LOCK_TYPE));
         boundStatement.bind(trigger.getName(), trigger.getGroup(), LockType.t.name());
-        ResultSet rs = CassandraConnectionManager.getInstance().execute(boundStatement); 
-
-        return rs.one();  
+        ResultSet rs = CassandraConnectionManager.getInstance().execute(boundStatement);
+        
+        return rs.one();   
     }
-    
+
+
+    public List<Row> findAllLocks(Key key) {
+                
+        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_GET_BY_KEY));
+        boundStatement.bind(key.getName(), key.getGroup());
+        ResultSet rs = CassandraConnectionManager.getInstance().execute(boundStatement);
+        
+        return rs.all();   
+    }
+
     public Row findTriggerLockByTime(TriggerKey trigger, Date time) {
                 
-        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_GET_BY_KEY_TIME));
-        boundStatement.bind(trigger.getName(), trigger.getGroup(), LockType.t.name(), time.getTime());
-        ResultSet rs = CassandraConnectionManager.getInstance().execute(boundStatement); 
-
-        return rs.one();  
+        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_GET_BY_KEY_LOCK_TYPE));
+        boundStatement.bind(trigger.getName(), trigger.getGroup(), LockType.t.name());
+        List<Row> rs = CassandraConnectionManager.getInstance().execute(boundStatement).all();
+        
+        for (Row row : rs) {
+            if (time.getTime() == row.getTimestamp(LOCK_TIME).getTime()) {
+                return row;
+            }
+        }
+        
+        return null;   
     }
     
-    public List<Row> findTriggerLockAll(TriggerKey trigger) {
-                
-        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_GET_BY_KEY));
-        boundStatement.bind(trigger.getName(), trigger.getGroup(), LockType.t.name());
-        ResultSet rs = CassandraConnectionManager.getInstance().execute(boundStatement); 
+    public ResultSetFuture findOwnLocks() {
+        
+        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_GET_BY_INSTANCE_ID));
+        boundStatement.bind(instanceId);
+        ResultSetFuture rs = CassandraConnectionManager.getInstance().executeAsync(boundStatement); 
 
-        return rs.all();  
+        return rs;
     }
-
+    
     public List<TriggerKey> findOwnTriggersLocks() {
         
         final List<TriggerKey> ret = new LinkedList<>();
 
-        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_GET_BY_INSTANCE_ID));
-        boundStatement.bind(instanceId, LockType.t.name());
-        ResultSetFuture rs = CassandraConnectionManager.getInstance().executeAsync(boundStatement); 
+        ResultSetFuture rs = findOwnLocks(); 
 
         rs.getUninterruptibly().forEach(row -> {
-            ret.add(toTriggerKey(row));
+            
+            if(LockType.t.name().equals(row.getString(LOCK_TYPE))){
+                ret.add(toTriggerKey(row));
+            }
         });
         
         return ret;
     }
+    
 
+    public void lockUpdate(Key key, String type){
+    
+        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_UPDATE));
+        boundStatement.bind(instanceId, clock.now().getTime(), key.getName(), key.getGroup(), type);
+        CassandraConnectionManager.getInstance().execute(boundStatement); 
+    }
+    
     public void lockJob(JobDetail job) {
         log.debug("Inserting lock for job {}", job.getKey());
         
         BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_INSERT));
-        boundStatement.bind(LockType.j.name(), job.getKey().getGroup(), job.getKey().getName(), instanceId, clock.now().getTime());
+        boundStatement.bind(job.getKey().getName(), job.getKey().getGroup(), job.getKey().getGroup(), LockType.j.name(), instanceId, clock.now().getTime());
         CassandraConnectionManager.getInstance().execute(boundStatement); 
     }
 
     public void lockTrigger(TriggerKey key) {
         log.info("Inserting lock for trigger {}", key);
         
-        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_INSERT));
-        boundStatement.bind(LockType.t.name(), key.getGroup(), key.getName(), instanceId, clock.now().getTime());
-        CassandraConnectionManager.getInstance().execute(boundStatement); 
+        StringBuilder sb = new StringBuilder("INSERT INTO ")
+            .append(TABLE_NAME_LOCKS).append("(keyName, keyGroup, type, keyGroup_index, instanceId, time) ")
+            .append("VALUES ('").append(key.getName())
+            .append("', '").append(key.getGroup())
+            .append("', '").append(LockType.t.name())
+            .append("', '").append(key.getGroup())
+            .append("', '").append(instanceId)
+            .append("', '").append(clock.now().getTime())
+            .append("');");
+
+          String query = sb.toString();
+          CassandraConnectionManager.getInstance().execute(query);
+
+//        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_INSERT));
+//        boundStatement.bind(key.getName(), key.getGroup(), key.getGroup(), LockType.t.name(), instanceId, clock.now().getTime());
+//        CassandraConnectionManager.getInstance().execute(boundStatement);  
     }
     
     /**
@@ -219,8 +257,6 @@ public class LocksDao implements GroupedDao{
             if(trigerLock != null){
 
                 lockTrigger(key);
-
-                remove(trigerLock);
 
                 ret = true;
                 
@@ -247,34 +283,33 @@ public class LocksDao implements GroupedDao{
      */
     public boolean updateOwnLock(TriggerKey key) throws JobPersistenceException {
 
-        List<Boolean> wasApplied = new ArrayList<>();
+        boolean wasApplied = false;
         
         try{
             
-            BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_GET_BY_KEY_TYPE_INSTANCE_ID));
-            boundStatement.bind(key.getName(), key.getGroup(), LockType.t.name(), instanceId) ;
-            List<Row> rsList = CassandraConnectionManager.getInstance().execute(boundStatement).all(); 
-
-            wasApplied.add(!rsList.isEmpty());
+            List<Row> allLocks = findAllLocks(key);
             
-            lockTrigger(key);
-            
-            rsList.forEach((row) -> {
-                remove(row);
-            });
+            for (Row lock : allLocks) {
+                if(instanceId.equals(lock.getString(LOCK_INSTANCE_ID))){
+                
+                    lockUpdate(key, lock.getString(LOCK_TYPE));
+                    
+                    wasApplied = true;
+                }
+            }
                      
         } catch (CassandraDatabaseException e){
             log.error("Relock failed because: " + e.getMessage(), e);
             return false;
         }
         
-        return wasApplied.contains(Boolean.TRUE);
+        return wasApplied;
     }
 
     public void remove(Row lock) {
         
         BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_DELETE));
-        boundStatement.bind(lock.getString(LOCK_TYPE), lock.getString(KEY_GROUP), lock.getString(KEY_NAME), lock.getString(LOCK_TIME), lock.getString(LOCK_INSTANCE_ID));
+        boundStatement.bind(lock.getString(KEY_NAME), lock.getString(KEY_GROUP), lock.getString(LOCK_TYPE));
         CassandraConnectionManager.getInstance().execute(boundStatement); 
     }
 
@@ -286,12 +321,10 @@ public class LocksDao implements GroupedDao{
     public void unlockTrigger(OperableTrigger trigger) {
         log.info("Removing trigger lock {}.{}", trigger.getKey(), instanceId);
         
-        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_GET_BY_KEY_INSTANCE_ID));
-        boundStatement.bind(trigger.getKey().getName(), trigger.getKey().getGroup(), instanceId) ;
-        List<Row> rsList = CassandraConnectionManager.getInstance().execute(boundStatement).all(); 
-
-        rsList.forEach((row) -> {        
-            remove(row);
+         List<Row> allLocks = findAllLocks(new Key(trigger.getKey().getName(), trigger.getKey().getGroup()));
+        
+         allLocks.stream().filter((lock) -> (instanceId.equals(lock.getString(LOCK_INSTANCE_ID)))).forEachOrdered((lock) -> {
+             remove(lock);
         });
         
         log.info("Trigger lock {}.{} removed.", trigger.getKey(), instanceId);
@@ -299,12 +332,12 @@ public class LocksDao implements GroupedDao{
 
     public void unlockJob(JobDetail job) {
         log.debug("Removing lock for job {}", job.getKey());
-        remove(job.getKey());
+        remove(job.getKey(), LockType.j);
     }
 
-    private void remove(JobKey jobKey) {
-        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_DELETE_KEY));
-        boundStatement.bind(LockType.t, jobKey.getGroup(), jobKey.getName());
+    private void remove(JobKey jobKey, LockType lockType) {
+        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_DELETE));
+        boundStatement.bind(jobKey.getName(), jobKey.getGroup(), lockType.name());
         CassandraConnectionManager.getInstance().execute(boundStatement); 
     }
     

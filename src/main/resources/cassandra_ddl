@@ -2,104 +2,104 @@
 CREATE KEYSPACE quartz_nosql WITH REPLICATION = { 'class' : 'SimpleStrategy','replication_factor' : 1};
 
 CREATE TABLE IF NOT EXISTS quartz_nosql.calendars (
-	name text,
-	serializedObject blob,
-	PRIMARY KEY (name)
+ name text,
+ serializedObject blob,
+ PRIMARY KEY (name)
 );
 
 CREATE TABLE IF NOT EXISTS quartz_nosql.jobs (
-	keyName text,
-	keyGroup text,
-        keyGroup_index text,
-        jobId text,
-	jobDescription text,
-	jobClass text,
-	durability text,
-	requestsRecovery bool,
-	jobData text,
-	jobDataPlain text,
-	PRIMARY KEY ((keyGroup), keyName, jobId)
+ keyName text,
+ keyGroup text,
+ keyGroup_index text,
+ jobId text,
+ jobDescription text,
+ jobClass text,
+ durability boolean,
+ requestsRecovery boolean,
+ jobData text,
+ jobDataPlain text,
+ PRIMARY KEY ((keyGroup), keyName, jobId)
 );
 CREATE CUSTOM INDEX IF NOT EXISTS jobs_keyGroup_contains ON quartz_nosql.jobs (keyGroup_index)
-	USING 'org.apache.cassandra.index.sasi.SASIIndex'
-	WITH OPTIONS = { 'mode': 'CONTAINS' };
+ USING 'org.apache.cassandra.index.sasi.SASIIndex'
+ WITH OPTIONS = { 'mode': 'CONTAINS' };
 	
 CREATE CUSTOM INDEX IF NOT EXISTS jobs_jobId ON quartz_nosql.jobs (jobId)
-	USING 'org.apache.cassandra.index.sasi.SASIIndex'
+ USING 'org.apache.cassandra.index.sasi.SASIIndex';
 
 CREATE TABLE IF NOT EXISTS quartz_nosql.locks (
-	type text,
-	keyName text,
-	keyGroup text,
-        keyGroup_index text,
-	instanceId text,
-	time timestamp,
-	PRIMARY KEY ((keyGroup), keyName, type, time, instanceId)
+ keyName text,
+ keyGroup text,
+ keyGroup_index text,
+ type text,
+ instanceId text,
+ time timestamp,
+ PRIMARY KEY ((keyGroup), keyName, type)
 );
 
+CREATE CUSTOM INDEX IF NOT EXISTS locks_instanceId ON quartz_nosql.locks (instanceId)
+ USING 'org.apache.cassandra.index.sasi.SASIIndex';
+
 CREATE CUSTOM INDEX IF NOT EXISTS locks_keyGroup_contains ON quartz_nosql.locks (keyGroup_index)
-	USING 'org.apache.cassandra.index.sasi.SASIIndex'
-	WITH OPTIONS = { 'mode': 'CONTAINS' };
+ USING 'org.apache.cassandra.index.sasi.SASIIndex'
+ WITH OPTIONS = { 'mode': 'CONTAINS' };
 
 CREATE TABLE IF NOT EXISTS quartz_nosql.paused_job_groups (
-	keyGroup text,
-	keyGroup_index text,
-
-	PRIMARY KEY (keyGroup)
+ keyGroup text,
+ keyGroup_index text,
+ PRIMARY KEY (keyGroup)
 );
 
 CREATE CUSTOM INDEX IF NOT EXISTS paused_job_groups_keyGroup_contains ON quartz_nosql.paused_job_groups (keyGroup_index)
-	USING 'org.apache.cassandra.index.sasi.SASIIndex'
-	WITH OPTIONS = { 'mode': 'CONTAINS' };
+ USING 'org.apache.cassandra.index.sasi.SASIIndex'
+ WITH OPTIONS = { 'mode': 'CONTAINS' };
 
 CREATE TABLE IF NOT EXISTS quartz_nosql.paused_trigger_groups (
-	keyGroup text,
-	keyGroup_index text,
-	PRIMARY KEY (keyGroup)
+ keyGroup text,
+ keyGroup_index text,
+ PRIMARY KEY (keyGroup)
 );
 
 CREATE CUSTOM INDEX IF NOT EXISTS paused_trigger_groups_keyGroup_contains ON quartz_nosql.paused_trigger_groups (keyGroup_index)
-	USING 'org.apache.cassandra.index.sasi.SASIIndex'
-	WITH OPTIONS = { 'mode': 'CONTAINS' };
-
+ USING 'org.apache.cassandra.index.sasi.SASIIndex'
+ WITH OPTIONS = { 'mode': 'CONTAINS' };
 
 CREATE TABLE IF NOT EXISTS quartz_nosql.schedulers (
-	schedulerName text,
-	instanceId text,
-	lastCheckinTime long,
-	checkinInterval long,
-	PRIMARY KEY (schedulerName, instanceId)
+ schedulerName text,
+ instanceId text,
+ lastCheckinTime bigint,
+ checkinInterval bigint,
+ PRIMARY KEY (schedulerName, instanceId)
 );
 
 CREATE TABLE IF NOT EXISTS quartz_nosql.triggers (
-	keyName text,
-	keyGroup text,
-        keyGroup_index text,
-	state text,
-	class text,
-	calendarName text,
-	description text,
-	jobId text,
-	jobData text,
-	jobDataPlain text,
-	priority int,
-	startTime timestamp,
-	endTime timestamp,
-	cronExpression text,
-	fireInstanceId text,
-	previousFireTime timestamp,
-	nextFireTime timestamp,
-	finalFireTime timestamp,
-	misfireInstruction int,
-	repeatIntervalUnit text,
-	repeatInterval int,
-	timesTriggered int,
-	timezone text,
-	startTimeOfDay bigint, 
-	endTimeOfDay bigint,
-	repeatCount int,
-	
-	PRIMARY KEY ((keyGroup), keyName)
+ keyName text,
+ keyGroup text,
+ keyGroup_index text,
+ state text,
+ class text,
+ calendarName text,
+ description text,
+ jobId text,
+ jobData text,
+ jobDataPlain text,
+ priority int,
+ startTime timestamp,
+ endTime timestamp,
+ cronExpression text,
+ fireInstanceId text,
+ previousFireTime timestamp,
+ nextFireTime timestamp,
+ finalFireTime timestamp,
+ misfireInstruction int,
+ repeatIntervalUnit text,
+ repeatInterval bigint,
+ timesTriggered int,
+ timezone text,
+ startTimeOfDay bigint,
+ endTimeOfDay bigint,
+ repeatCount int,
+ PRIMARY KEY ((keyGroup), keyName)
 );
 
 CREATE CUSTOM INDEX IF NOT EXISTS triggers_keyGroup_contains ON quartz_nosql.triggers (keyGroup_index)
@@ -107,4 +107,4 @@ CREATE CUSTOM INDEX IF NOT EXISTS triggers_keyGroup_contains ON quartz_nosql.tri
 	WITH OPTIONS = { 'mode': 'CONTAINS' };
 	
 CREATE CUSTOM INDEX IF NOT EXISTS triggers_jobId ON quartz_nosql.triggers (jobId)
-	USING 'org.apache.cassandra.index.sasi.SASIIndex'
+	USING 'org.apache.cassandra.index.sasi.SASIIndex';

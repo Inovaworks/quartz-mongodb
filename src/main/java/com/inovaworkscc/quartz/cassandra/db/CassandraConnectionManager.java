@@ -29,14 +29,15 @@ public class CassandraConnectionManager {
 
     public static String CASSANDRA_CLUSTER_NAME;
     public static ConsistencyLevel CONSISTENCY_LEVEL;
-    public static String CONTACT_POINT;
-    public static String KEYSPACE_NAME;
-    public static Integer PORT;
     public static Integer CONN_POOLING_LOCAL_CORE;
     public static Integer CONN_POOLING_LOCAL_MAX;
     public static Integer CONN_POOLING_REMOTE_CORE;
     public static Integer CONN_POOLING_REMOTE_MAX;
 
+    public static String CONTACT_POINT = null;
+    public static String PORT = null;
+    public static String KEYSPACE_NAME = null;
+    
     private Cluster cluster;
     private Session session;
 
@@ -47,6 +48,20 @@ public class CassandraConnectionManager {
     
     private static final Boolean LOCK_GET_STATEMENT=Boolean.TRUE;
 
+    /**
+     * Call before getInstance to set CONTACT_POINT, PORT and KEYSPACE_NAME
+     * @param contactPoint
+     * @param port
+     * @param keyspaceName
+     * @return 
+     */
+    public static void setProperties(String contactPoint, String port, String keyspaceName) {
+        
+       CONTACT_POINT = contactPoint;
+       PORT = port;
+       KEYSPACE_NAME = keyspaceName;
+    }
+    
     public static CassandraConnectionManager getInstance() {
         
         CassandraConnectionManager localInstance = CassandraConnectionManager.instance;
@@ -72,14 +87,14 @@ public class CassandraConnectionManager {
         }
 
         if(CASSANDRA_CLUSTER_NAME==null) {
-            CASSANDRA_CLUSTER_NAME = "quartz_scheduler_cluster";
+            CASSANDRA_CLUSTER_NAME = "quartz_nosql_cluster";
         }
 
         if (KEYSPACE_NAME == null) {
-            KEYSPACE_NAME = "quartz_scheduler";
+            KEYSPACE_NAME = "quartz_nosql";
         }
         if (PORT == null) {
-            PORT = 9042;
+            PORT = "9042";
         }
 
         if (CONN_POOLING_LOCAL_CORE==null){
@@ -114,7 +129,6 @@ public class CassandraConnectionManager {
         }
     }
 
-
     private void restartDatabaseConnection() throws CassandraDatabaseException {
         if (session != null || cluster != null) {
             this.shutdownConnection();
@@ -131,7 +145,7 @@ public class CassandraConnectionManager {
 
                         String[] contactPoints = CONTACT_POINT.split(",");
                         
-                        cluster = Cluster.builder().addContactPoints(contactPoints).withPort(PORT)
+                        cluster = Cluster.builder().addContactPoints(contactPoints).withPort(Integer.parseInt(PORT))
                                 .withPoolingOptions(poolingOptions)
                                 .withQueryOptions(new QueryOptions().setConsistencyLevel(CONSISTENCY_LEVEL)).withClusterName(CASSANDRA_CLUSTER_NAME).build();
                         session = cluster.connect(KEYSPACE_NAME);
@@ -357,6 +371,15 @@ public class CassandraConnectionManager {
     public ResultSetFuture executeAsync(Statement stmt) {
         return this.executeAsync(stmt, false);
     }
+    
+    /**
+     *
+     * @param stmt
+     * @return
+     */
+    public ResultSetFuture executeAsync(String stmt) {
+        return this.executeAsync(stmt, false);
+    }
 
     /**
      *
@@ -365,6 +388,55 @@ public class CassandraConnectionManager {
      * @return
      */
     public ResultSetFuture executeAsync(Statement stmt, boolean retryOnceOnNoHostAvailable) {
+        try {
+            if (session == null) {
+                restartDatabaseConnection();
+            }
+            return session.executeAsync(stmt);
+        } catch (NoHostAvailableException ne) {
+            restartDatabaseConnection();
+            if (retryOnceOnNoHostAvailable) {
+                try {
+                    return session.executeAsync(stmt);
+                } catch (NoHostAvailableException e) {
+                    throw new CassandraDatabaseException(ne);
+                }
+            } else {
+                throw new CassandraDatabaseException(ne);
+            }
+
+        } catch (com.datastax.driver.core.exceptions.InvalidQueryException iq) {
+            if (iq.getMessage() != null && iq.getMessage().contains("You may have used a PreparedStatement that was created with another Cluster instance")) {
+                // special case where a new connection has being created but the prepared statemtn was already registed in a previous cluster instance.
+                // but because in this method the key statemtn specs is not present, all prepared statements will be re-registered.
+                for (String key : statementSpecsMap.keySet()) {
+                    try {
+                        PreparedStatement statement = this.createStatement(key);
+                        statementsMap.put(key, statement);
+
+                    } catch (Exception e) {
+                        //ignore error while trying to register the preparedstatement
+                    }
+                }
+
+                // at the end the query is retried
+                return session.executeAsync(stmt);
+            } else {
+                throw new CassandraDatabaseException(iq);
+            }
+
+        } catch (CassandraDatabaseException ge) {
+            throw ge;
+        }
+    }
+    
+    /**
+     *
+     * @param stmt
+     * @param retryOnceOnNoHostAvailable
+     * @return
+     */
+    public ResultSetFuture executeAsync(String stmt, boolean retryOnceOnNoHostAvailable) {
         try {
             if (session == null) {
                 restartDatabaseConnection();

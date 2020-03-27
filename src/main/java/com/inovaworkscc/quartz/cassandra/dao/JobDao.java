@@ -88,7 +88,6 @@ public class JobDao implements GroupedDao{
             + "?, "
             + "?, "
             + "?, "
-            + "?, "
             + "?)"
     );
     
@@ -102,13 +101,11 @@ public class JobDao implements GroupedDao{
             + "?, "
             + "?, "
             + "?, "
-            + "?, "
             + "?)"
     );
     
     public static final String JOBS_INSERT_NO_JOB_DATA_PLAIN = CassandraConnectionManager.registerStatement("JOBS_INSERT_NO_JOB_DATA_PLAIN",
             "INSERT INTO " + TABLE_NAME_JOBS + " (" + KEY_NAME + "," + KEY_GROUP + "," + KEY_GROUP + "_index" + "," + JOB_ID + "," + JOB_DESCRIPTION + "," + JOB_CLASS + "," + JOB_DURABILITY + "," + JOB_REQUESTS_RECOVERY + ")" + "VALUES ("
-            + "?, "
             + "?, "
             + "?, "
             + "?, "
