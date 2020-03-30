@@ -21,7 +21,7 @@ import java.util.*;
 
 public class TriggerRunner {
 
-    private static final Logger log = LoggerFactory.getLogger(TriggerRunner.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TriggerRunner.class);
 
     private static final Comparator<OperableTrigger> NEXT_FIRE_TIME_COMPARATOR
             = new Comparator<OperableTrigger>() {
@@ -60,8 +60,8 @@ public class TriggerRunner {
             throws JobPersistenceException {
         Date noLaterThanDate = new Date(noLaterThan + timeWindow);
 
-        log.debug("Finding up to {} triggers which have time less than {}",
-                maxCount, noLaterThanDate);
+//        LOG.debug("Finding up to {} triggers which have time less than {}",
+//                maxCount, noLaterThanDate);
 
         List<OperableTrigger> triggers = acquireNextTriggers(noLaterThanDate, maxCount);
 
@@ -78,7 +78,7 @@ public class TriggerRunner {
         List<TriggerFiredResult> results = new ArrayList<TriggerFiredResult>(triggers.size());
 
         for (OperableTrigger trigger : triggers) {
-            log.debug("Fired trigger {}", trigger.getKey());
+//            LOG.debug("Fired trigger {}", trigger.getKey());
 
             TriggerFiredBundle bundle = createTriggerFiredBundle(trigger);
 
@@ -89,7 +89,7 @@ public class TriggerRunner {
                     results.add(new TriggerFiredResult(bundle));
                     persister.storeTrigger(trigger, true);
                 } catch (CassandraDatabaseException dk) {
-                    log.debug("Job disallows concurrent execution and is already running {}", job.getKey());
+                    LOG.debug("Job disallows concurrent execution and is already running {}", job.getKey());
                     locksDao.unlockTrigger(trigger);
                     lockManager.unlockExpired(job);
                 }
@@ -115,7 +115,7 @@ public class TriggerRunner {
             }
 
             if (trigger.getJobKey() == null) {
-                log.error("Error retrieving job for trigger {}, setting trigger state to ERROR.", trigger.getKey());
+                LOG.error("Error retrieving job for trigger {}, setting trigger state to ERROR.", trigger.getKey());
                 triggerDao.transferState(trigger.getKey(), Constants.STATE_WAITING, Constants.STATE_ERROR);
                 continue;
             }
@@ -123,17 +123,17 @@ public class TriggerRunner {
             TriggerKey key = trigger.getKey();
             if (lockManager.tryLock(key)) {
                 if (prepareForFire(noLaterThanDate, trigger)) {
-                    log.info("Acquired trigger: {}", trigger.getKey());
+//                    LOG.info("Acquired trigger: {}", trigger.getKey());
                     triggers.put(trigger.getKey(), trigger);
                 } else {
                     lockManager.unlockAcquiredTrigger(trigger);
                 }
             } else if (lockManager.relockExpired(key)) {
-                log.info("Recovering trigger: {}", trigger.getKey());
+//                LOG.info("Recovering trigger: {}", trigger.getKey());
                 OperableTrigger recoveryTrigger = recoverer.doRecovery(trigger);
                 lockManager.unlockAcquiredTrigger(trigger);
                 if (recoveryTrigger != null && lockManager.tryLock(recoveryTrigger.getKey())) {
-                    log.info("Acquired trigger: {}", recoveryTrigger.getKey());
+//                    LOG.info("Acquired trigger: {}", recoveryTrigger.getKey());
                     triggers.put(recoveryTrigger.getKey(), recoveryTrigger);
                 }
             }
@@ -165,7 +165,7 @@ public class TriggerRunner {
         }
 
         if (triggers.containsKey(trigger.getKey())) {
-            log.debug("Skipping trigger {} as we have already acquired it.", trigger.getKey());
+//            LOG.debug("Skipping trigger {} as we have already acquired it.", trigger.getKey());
             return true;
         }
         return false;
@@ -204,7 +204,7 @@ public class TriggerRunner {
         if (misfireHandler.applyMisfire(trigger)) {
             persister.storeTrigger(trigger, true);
 
-            log.debug("Misfire trigger {}.", trigger.getKey());
+//            LOG.debug("Misfire trigger {}.", trigger.getKey());
 
             if (persister.removeTriggerWithoutNextFireTime(trigger)) {
                 return true;
@@ -214,8 +214,8 @@ public class TriggerRunner {
             // and we don't want to hang the quartz scheduler thread up on <code>sigLock.wait(timeUntilTrigger);</code>
             // so, check again that the trigger is due to fire
             if (trigger.getNextFireTime().after(noLaterThanDate)) {
-                log.debug("Skipping trigger {} as it misfired and was scheduled for {}.",
-                        trigger.getKey(), trigger.getNextFireTime());
+//                LOG.debug("Skipping trigger {} as it misfired and was scheduled for {}.",
+//                        trigger.getKey(), trigger.getNextFireTime());
                 return true;
             }
         }

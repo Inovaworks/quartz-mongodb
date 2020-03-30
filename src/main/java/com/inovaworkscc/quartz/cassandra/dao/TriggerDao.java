@@ -14,8 +14,6 @@ import org.quartz.Trigger;
 import org.quartz.TriggerKey;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.spi.OperableTrigger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -37,8 +35,6 @@ import java.util.Collection;
 import java.util.HashMap;
 
 public class TriggerDao implements GroupedDao{
-
-    private static final Logger log = LoggerFactory.getLogger(TriggerDao.class);
 
     public static final String TABLE_NAME_TRIGGERS = "triggers";
 
@@ -226,13 +222,6 @@ public class TriggerDao implements GroupedDao{
         CassandraConnectionManager.getInstance().execute(boundStatement);   
     }
 
-    public List<Row> getCollection() {
-        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(TRIGGERS_GET_ALL));
-        ResultSet rs = CassandraConnectionManager.getInstance().execute(boundStatement); 
-
-        return rs.all();  
-    }
-    
     public boolean exists(TriggerKey key) throws JobPersistenceException {
         
         OperableTrigger existingTrigger = this.getTrigger(key);

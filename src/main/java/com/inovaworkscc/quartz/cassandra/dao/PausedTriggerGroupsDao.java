@@ -11,12 +11,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class PausedTriggerGroupsDao implements GroupedDao{
-
-    private static final Logger log = LoggerFactory.getLogger(PausedJobGroupsDao.class);
 
     public static final String TABLE_NAME_PAUSED_TRIGGER_GROUPS = "paused_trigger_groups";
         

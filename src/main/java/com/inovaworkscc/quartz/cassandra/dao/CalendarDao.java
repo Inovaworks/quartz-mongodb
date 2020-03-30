@@ -13,9 +13,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class CalendarDao {
 
@@ -64,14 +61,6 @@ public class CalendarDao {
         CassandraConnectionManager.getInstance().execute(boundStatement);   
     }
 
-    private List<Row> getCollection() {
-        
-        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(CALENDARS_GET_ALL));
-        ResultSet rs = CassandraConnectionManager.getInstance().execute(boundStatement); 
-
-        return rs.all();
-    }
-
     public long getCount() {
         
         BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(CALENDARS_COUNT));
@@ -96,28 +85,30 @@ public class CalendarDao {
         if(calName == null)
             return null;
         
-        try {
-            BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(CALENDARS_GET));
-            boundStatement.bind(calName);
+//        try {
+        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(CALENDARS_GET));
+        boundStatement.bind(calName);
+
+//            ResultSetFuture rs = CassandraConnectionManager.getInstance().executeAsync(boundStatement);
+        ResultSet rs = CassandraConnectionManager.getInstance().execute(boundStatement);
+        Calendar calendar;
             
-            ResultSetFuture rs = CassandraConnectionManager.getInstance().executeAsync(boundStatement);
-            Calendar calendar;
-            
-            Row r = rs.get().one();
-            
-            if (r != null){
-                
-                ByteBuffer bb = r.getBytes("serializedObject");
-                
-                calendar = SerialUtils.deserialize(bb.array(), Calendar.class);
-                
-                return calendar;
-            }
-        } catch (InterruptedException ex) {
-            throw new JobPersistenceException(ex.getMessage(), ex);
-        } catch (ExecutionException ex) {
-            throw new JobPersistenceException(ex.getMessage(), ex);
+//            Row r = rs.get().one();
+        Row r = rs.one();
+
+        if (r != null){
+
+            ByteBuffer bb = r.getBytes("serializedObject");
+
+            calendar = SerialUtils.deserialize(bb.array(), Calendar.class);
+
+            return calendar;
         }
+//        } catch (InterruptedException ex) {
+//            throw new JobPersistenceException(ex.getMessage(), ex);
+//        } catch (ExecutionException ex) {
+//            throw new JobPersistenceException(ex.getMessage(), ex);
+//        }
         
         
         return null;

@@ -124,14 +124,6 @@ public class JobDao implements GroupedDao{
         this.jobConverter = jobConverter;
     }
 
-    public List<Row> getCollection() {
-        
-        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(JOBS_GET_ALL));
-        ResultSet rs = CassandraConnectionManager.getInstance().execute(boundStatement); 
-
-        return rs.all();  
-    }
-
     public List<Row> clear() {
         
         BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(JOBS_DELETE_ALL));
@@ -154,7 +146,7 @@ public class JobDao implements GroupedDao{
     public Row getById(String id) {
         
         BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(JOBS_GET_BY_JOB_ID));
-        boundStatement.bind(id.toString());
+        boundStatement.bind(id);
                 
         ResultSet rs = CassandraConnectionManager.getInstance().execute(boundStatement); 
 
@@ -229,10 +221,10 @@ public class JobDao implements GroupedDao{
         
         List<Row> rows = getJobs(matcher);
         
-        List<String> ret = new ArrayList<String>();
-        for (Row row : rows) {
+        List<String> ret = new ArrayList<>();
+        rows.forEach((row) -> {
             ret.add(row.getString(JOB_ID));
-        }
+        });
         return ret;
     }
 
@@ -266,7 +258,7 @@ public class JobDao implements GroupedDao{
 
         JobDataMap jobDataMap = newJob.getJobDataMap();
 
-        String jobId = null;
+        String jobId;
         if (existingJob != null && replaceExisting) {
             
             jobId = existingJob.getString(JOB_ID);
@@ -288,7 +280,7 @@ public class JobDao implements GroupedDao{
 
     private void storeJob(JobDataMap jobDataMap, JobKey key, String jobId, JobDetail newJob) throws JobPersistenceException, CassandraDatabaseException {
         
-        BoundStatement boundStatement = null;
+        BoundStatement boundStatement;
         
         if(jobDataMap.isEmpty()){
             

@@ -28,7 +28,7 @@ import org.quartz.utils.Key;
 
 public class LocksDao implements GroupedDao{
 
-    private static final Logger log = LoggerFactory.getLogger(LocksDao.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LocksDao.class);
 
     public static final String TABLE_NAME_LOCKS = "locks";
     
@@ -96,7 +96,7 @@ public class LocksDao implements GroupedDao{
                     + KEY_GROUP + "_index LIKE ?"
     );
      
-    private Clock clock;
+    private final Clock clock;
     public final String instanceId;
 
     public LocksDao(Clock clock, String instanceId) {
@@ -121,15 +121,7 @@ public class LocksDao implements GroupedDao{
             }
         });  
     }
-
-    public List<Row> getCollection() {
-
-        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_GET_ALL));
-        ResultSet rs = CassandraConnectionManager.getInstance().execute(boundStatement); 
-
-        return rs.all();  
-    }
-
+    
     public Row findJobLock(JobKey job) {
                
         BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_GET_BY_KEY_LOCK_TYPE));
@@ -165,7 +157,7 @@ public class LocksDao implements GroupedDao{
         List<Row> rs = CassandraConnectionManager.getInstance().execute(boundStatement).all();
         
         for (Row row : rs) {
-            if (time.getTime() == row.getTimestamp(LOCK_TIME).getTime()) {
+            if (time.equals(row.getTimestamp(LOCK_TIME))) {
                 return row;
             }
         }
@@ -202,37 +194,24 @@ public class LocksDao implements GroupedDao{
     public void lockUpdate(Key key, String type){
     
         BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_UPDATE));
-        boundStatement.bind(instanceId, clock.now().getTime(), key.getName(), key.getGroup(), type);
+        boundStatement.bind(instanceId, clock.now(), key.getName(), key.getGroup(), type);
         CassandraConnectionManager.getInstance().execute(boundStatement); 
     }
     
     public void lockJob(JobDetail job) {
-        log.debug("Inserting lock for job {}", job.getKey());
+        //LOG.debug("Inserting lock for job {}", job.getKey());
         
         BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_INSERT));
-        boundStatement.bind(job.getKey().getName(), job.getKey().getGroup(), job.getKey().getGroup(), LockType.j.name(), instanceId, clock.now().getTime());
+        boundStatement.bind(job.getKey().getName(), job.getKey().getGroup(), job.getKey().getGroup(), LockType.j.name(), instanceId, clock.now());
         CassandraConnectionManager.getInstance().execute(boundStatement); 
     }
 
     public void lockTrigger(TriggerKey key) {
-        log.info("Inserting lock for trigger {}", key);
+        //LOG.info("Inserting lock for trigger {}", key);
         
-        StringBuilder sb = new StringBuilder("INSERT INTO ")
-            .append(TABLE_NAME_LOCKS).append("(keyName, keyGroup, type, keyGroup_index, instanceId, time) ")
-            .append("VALUES ('").append(key.getName())
-            .append("', '").append(key.getGroup())
-            .append("', '").append(LockType.t.name())
-            .append("', '").append(key.getGroup())
-            .append("', '").append(instanceId)
-            .append("', '").append(clock.now().getTime())
-            .append("');");
-
-          String query = sb.toString();
-          CassandraConnectionManager.getInstance().execute(query);
-
-//        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_INSERT));
-//        boundStatement.bind(key.getName(), key.getGroup(), key.getGroup(), LockType.t.name(), instanceId, clock.now().getTime());
-//        CassandraConnectionManager.getInstance().execute(boundStatement);  
+        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(LOCKS_INSERT));
+        boundStatement.bind(key.getName(), key.getGroup(), key.getGroup(), LockType.t.name(), instanceId, clock.now());
+        CassandraConnectionManager.getInstance().execute(boundStatement);  
     }
     
     /**
@@ -248,7 +227,7 @@ public class LocksDao implements GroupedDao{
      */
     public boolean relock(TriggerKey key, Date lockTime) {
         
-        boolean ret = false;
+        boolean ret;
 
         try{
             
@@ -264,12 +243,12 @@ public class LocksDao implements GroupedDao{
                 ret = false;
             }
             
-            log.info("Scheduler {} couldn't relock the trigger {} with lock time: {}",
-                instanceId, key, lockTime.getTime());
+            //LOG.info("Scheduler {} couldn't relock the trigger {} with lock time: {}",
+            //    instanceId, key, lockTime);
                     
             return ret;
         } catch (CassandraDatabaseException e){
-            log.error("Relock failed because: " + e.getMessage(), e);
+            LOG.error("Relock failed because: " + e.getMessage(), e);
             return false;
         }
     }
@@ -299,7 +278,7 @@ public class LocksDao implements GroupedDao{
             }
                      
         } catch (CassandraDatabaseException e){
-            log.error("Relock failed because: " + e.getMessage(), e);
+            LOG.error("Relock failed because: " + e.getMessage(), e);
             return false;
         }
         
@@ -319,7 +298,7 @@ public class LocksDao implements GroupedDao{
      * @param trigger    to unlock
      */
     public void unlockTrigger(OperableTrigger trigger) {
-        log.info("Removing trigger lock {}.{}", trigger.getKey(), instanceId);
+//        LOG.info("Removing trigger lock {}.{}", trigger.getKey(), instanceId);
         
          List<Row> allLocks = findAllLocks(new Key(trigger.getKey().getName(), trigger.getKey().getGroup()));
         
@@ -327,11 +306,11 @@ public class LocksDao implements GroupedDao{
              remove(lock);
         });
         
-        log.info("Trigger lock {}.{} removed.", trigger.getKey(), instanceId);
+//        LOG.info("Trigger lock {}.{} removed.", trigger.getKey(), instanceId);
     }
 
     public void unlockJob(JobDetail job) {
-        log.debug("Removing lock for job {}", job.getKey());
+//        LOG.debug("Removing lock for job {}", job.getKey());
         remove(job.getKey(), LockType.j);
     }
 

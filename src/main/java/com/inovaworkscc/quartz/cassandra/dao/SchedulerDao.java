@@ -16,7 +16,7 @@ import com.inovaworkscc.quartz.cassandra.util.Clock;
 
 public class SchedulerDao {
 
-    private static final Logger log = LoggerFactory.getLogger(SchedulerDao.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SchedulerDao.class);
 
     public static final String TABLE_NAME_SCHEDULERS = "paused_trigger_groups";
     
@@ -71,22 +71,14 @@ public class SchedulerDao {
         this.clock = clock;
     }
 
-    public List<Row> getCollection() {
-        
-        BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(SCHEDULERS_GET_ALL));
-        ResultSet rs = CassandraConnectionManager.getInstance().execute(boundStatement); 
-
-        return rs.all();
-    }
-
     /**
      * Checks-in in cluster to inform other nodes that its alive.
      */
     public void checkIn() {
         long lastCheckinTime = clock.millis();
 
-        log.debug("Saving node data: name='{}', id='{}', checkin time={}, interval={}",
-                schedulerName, instanceId, lastCheckinTime, clusterCheckinIntervalMillis);
+//        LOG.debug("Saving node data: name='{}', id='{}', checkin time={}, interval={}",
+//                schedulerName, instanceId, lastCheckinTime, clusterCheckinIntervalMillis);
 
         // If not found Cassandra will create a new entry with content from filter and update.
         BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(SCHEDULERS_UPSERT));
@@ -100,7 +92,7 @@ public class SchedulerDao {
      * @return Scheduler or null when not found
      */
     public Scheduler findInstance(String instanceId) {
-        log.debug("Finding scheduler instance: {}", instanceId);
+//        LOG.debug("Finding scheduler instance: {}", instanceId);
         
         BoundStatement boundStatement = new BoundStatement(CassandraConnectionManager.getInstance().getStatement(SCHEDULERS_GET_BY_NAME_INSTANCE_ID));
         boundStatement.bind(schedulerName, instanceId);
@@ -112,10 +104,10 @@ public class SchedulerDao {
         Scheduler scheduler = null;
         if (row != null) {
             scheduler = toScheduler(row);
-            log.debug("Returning scheduler instance '{}' with last checkin time: {}",
-                    scheduler.getInstanceId(), scheduler.getLastCheckinTime());
+//            LOG.debug("Returning scheduler instance '{}' with last checkin time: {}",
+//                    scheduler.getInstanceId(), scheduler.getLastCheckinTime());
         } else {
-            log.info("Scheduler instance '{}' not found.");
+//            LOG.info("Scheduler instance '{}' not found.");
         }
         return scheduler;
     }
@@ -158,8 +150,8 @@ public class SchedulerDao {
      * @return when removed successfully
      */
     public boolean remove(String instanceId, long lastCheckinTime) {
-        log.info("Removing scheduler: {},{},{}",
-                schedulerName, instanceId, lastCheckinTime);
+//        LOG.info("Removing scheduler: {},{},{}",
+//                schedulerName, instanceId, lastCheckinTime);
         
         boolean ret = false;
         
@@ -174,8 +166,8 @@ public class SchedulerDao {
             }
         }
 
-        log.info("Result of removing scheduler ({},{},{}): {}",
-            schedulerName, instanceId, lastCheckinTime, ret);
+//        log.info("Result of removing scheduler ({},{},{}): {}",
+//            schedulerName, instanceId, lastCheckinTime, ret);
 
         return ret;
     }
