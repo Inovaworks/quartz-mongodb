@@ -72,29 +72,39 @@ public class TriggerRunner {
 
         return triggers;
     }
+    
+    private boolean triggerWasRescheduled(OperableTrigger trigger1, OperableTrigger trigger2){
+        
+        return trigger1 != null && trigger2 != null &&
+                trigger1.getNextFireTime().equals(trigger2.getNextFireTime()); 
+    }
 
     public List<TriggerFiredResult> triggersFired(List<OperableTrigger> triggers)
             throws JobPersistenceException {
         List<TriggerFiredResult> results = new ArrayList<TriggerFiredResult>(triggers.size());
-
+        
         for (OperableTrigger trigger : triggers) {
 //            LOG.debug("Fired trigger {}", trigger.getKey());
+            
+            OperableTrigger persistedTriggerLock = triggerDao.getTrigger(trigger.getKey());
+            
+            // IW: Check if trigger was changed in the meantime
+            if (triggerWasRescheduled(trigger, persistedTriggerLock)) {
+                TriggerFiredBundle bundle = createTriggerFiredBundle(trigger);
 
-            TriggerFiredBundle bundle = createTriggerFiredBundle(trigger);
-
-            if (hasJobDetail(bundle)) {
-                JobDetail job = bundle.getJobDetail();
-                try {
-                    lockManager.lockJob(job);
-                    results.add(new TriggerFiredResult(bundle));
-                    persister.storeTrigger(trigger, true);
-                } catch (CassandraDatabaseException dk) {
-                    LOG.debug("Job disallows concurrent execution and is already running {}", job.getKey());
-                    locksDao.unlockTrigger(trigger);
-                    lockManager.unlockExpired(job);
+                if (hasJobDetail(bundle)) {
+                    JobDetail job = bundle.getJobDetail();
+                    try {
+                        lockManager.lockJob(job);
+                        results.add(new TriggerFiredResult(bundle));
+                        persister.storeTrigger(trigger, true);
+                    } catch (CassandraDatabaseException dk) {
+                        LOG.debug("Job disallows concurrent execution and is already running {}", job.getKey());
+                        locksDao.unlockTrigger(trigger);
+                        lockManager.unlockExpired(job);
+                    }
                 }
             }
-
         }
         return results;
     }

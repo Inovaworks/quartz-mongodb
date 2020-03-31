@@ -19,7 +19,7 @@ import java.util.List;
 
 public class TriggerAndJobPersister {
 
-    private static final Logger log = LoggerFactory.getLogger(TriggerAndJobPersister.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TriggerAndJobPersister.class);
 
     private final TriggerDao triggerDao;
     private final JobDao jobDao;
@@ -74,7 +74,7 @@ public class TriggerAndJobPersister {
 
     public boolean removeTriggerWithoutNextFireTime(OperableTrigger trigger) {
         if (trigger.getNextFireTime() == null) {
-            log.info("Removing trigger {} as it has no next fire time.", trigger.getKey());
+            LOG.info("Removing trigger {} as it has no next fire time.", trigger.getKey());
             removeTrigger(trigger.getKey());
             return true;
         }
@@ -94,7 +94,7 @@ public class TriggerAndJobPersister {
 
         removeOldTrigger(triggerKey);
         copyOldJobDataMap(newTrigger, oldTrigger);
-        storeNewTrigger(newTrigger, oldTrigger);
+        storeTrigger(newTrigger, true);
 
         return true;
     }
@@ -103,7 +103,7 @@ public class TriggerAndJobPersister {
             throws JobPersistenceException {
         String jobId = jobDao.storeJobInCassandra(newJob, false);
 
-        log.debug("Storing job {} and trigger {}", newJob.getKey(), newTrigger.getKey());
+        LOG.debug("Storing job {} and trigger {}", newJob.getKey(), newTrigger.getKey());
         storeTrigger(newTrigger, jobId, false);
     }
 
@@ -112,7 +112,7 @@ public class TriggerAndJobPersister {
         if (newTrigger.getJobKey() == null) {
             throw new JobPersistenceException("Trigger must be associated with a job. Please specify a JobKey.");
         }
-
+           
         Row row = jobDao.getJob(newTrigger.getJobKey());
         if (row != null) {
             storeTrigger(newTrigger, row.getString(Constants.TRIGGER_JOB_ID), replaceExisting);
@@ -154,7 +154,7 @@ public class TriggerAndJobPersister {
                 jobDao.remove(new JobKey(job.getString(Keys.KEY_NAME), job.getString(Keys.KEY_GROUP)));
             }
         } else {
-            log.debug("The trigger had no associated jobs");
+            LOG.debug("The trigger had no associated jobs");
         }
     }
 

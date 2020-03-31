@@ -431,7 +431,7 @@ public class TriggerDao implements GroupedDao{
                 trigger.get(CronTriggerPropertiesConverter.TRIGGER_CRON_EXPRESSION),
                 trigger.get(TriggerConverter.TRIGGER_FIRE_INSTANCE_ID),
                 trigger.get(TriggerConverter.TRIGGER_PREVIOUS_FIRE_TIME),
-                trigger.get( Constants.TRIGGER_NEXT_FIRE_TIME),
+                trigger.get(Constants.TRIGGER_NEXT_FIRE_TIME),
                 trigger.get(TriggerConverter.TRIGGER_FINAL_FIRE_TIME),
                 trigger.get(TriggerConverter.TRIGGER_MISFIRE_INSTRUCTION),
                 trigger.get(CalendarIntervalTriggerPropertiesConverter.TRIGGER_REPEAT_INTERVAL_UNIT),
