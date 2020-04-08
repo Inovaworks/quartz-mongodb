@@ -71,12 +71,12 @@ public class TriggerDao implements GroupedDao{
                     + Constants.TRIGGER_JOB_ID + " = ?"
     );
     public static final String TRIGGERS_GET_KEY_BY_JOB_ID = CassandraConnectionManager.registerStatement("TRIGGERS_GET_KEY_BY_JOB_ID",
-            "SELECT " + KEY_NAME + "," + KEY_GROUP + "FROM " + TABLE_NAME_TRIGGERS + " WHERE "
+            "SELECT " + KEY_NAME + "," + KEY_GROUP + " FROM " + TABLE_NAME_TRIGGERS + " WHERE "
                     + Constants.TRIGGER_JOB_ID + " = ?"
     );
     
     public static final String TRIGGERS_GET_KEY_IN_JOB_ID = CassandraConnectionManager.registerStatement("TRIGGERS_GET_KEY_IN_JOB_ID",
-            "SELECT " + KEY_NAME + "," + KEY_GROUP + "FROM " + TABLE_NAME_TRIGGERS + " WHERE "
+            "SELECT " + KEY_NAME + "," + KEY_GROUP + " FROM " + TABLE_NAME_TRIGGERS + " WHERE "
                     + Constants.TRIGGER_JOB_ID + " IN ?"
     );
     
