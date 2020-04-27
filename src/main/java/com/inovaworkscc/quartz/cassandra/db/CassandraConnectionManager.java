@@ -11,11 +11,18 @@ import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.exceptions.NoHostAvailableException;
+import java.io.File;
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 /**
  *
@@ -165,6 +172,8 @@ public class CassandraConnectionManager {
                                 //ignore error while trying to register the preparedstatement
                             }
                         }
+                        
+                        createDatabase();
                     }
                 }
             } catch (NoHostAvailableException e) {
@@ -189,6 +198,29 @@ public class CassandraConnectionManager {
 
     }
 
+    private void createDatabase(){
+    
+        StringBuilder contentBuilder = new StringBuilder();
+        try (Stream<String> stream = Files.lines(Paths.get(getClass().getClassLoader().getResource("cassandra_ddl").toURI()), StandardCharsets.UTF_8)) 
+        {
+            stream.forEach(s -> contentBuilder.append(s).append("\n"));
+        } catch (URISyntaxException ex) {
+            LOG.log(Level.SEVERE, ex.getMessage(), ex);
+            throw new CassandraDatabaseException("Error", "Invalid DDL file path.");
+        } catch (IOException ex) {
+            throw new CassandraDatabaseException("Error", "Invalid DDL file.");
+        }
+        
+        String[] statements = contentBuilder.toString().split(";");
+        
+        for (String statement : statements) {
+            
+            statement = statement.replace("\n", "");
+            if(!statement.isEmpty())
+                session.execute(statement);
+        }
+    }
+    
     /**
      *
      * @param key

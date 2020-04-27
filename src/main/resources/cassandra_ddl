@@ -1,5 +1,4 @@
-
-CREATE KEYSPACE quartz_nosql WITH REPLICATION = { 'class' : 'SimpleStrategy','replication_factor' : 1};
+CREATE KEYSPACE IF NOT EXISTS quartz_nosql WITH REPLICATION = { 'class' : 'SimpleStrategy','replication_factor' : 1};
 
 CREATE TABLE IF NOT EXISTS quartz_nosql.calendars (
  name text,
