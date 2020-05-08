@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.inovaworkscc</groupId>
   <artifactId>quartz-nosql</artifactId>
-  <version>0.1-SNAPSHOT</version>
+  <version>1.0</version>
   <dependencies>
     <dependency>
       <groupId>org.quartz-scheduler</groupId>
