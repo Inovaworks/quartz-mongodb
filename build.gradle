@@ -55,6 +55,8 @@ dependencies {
     compile("commons-codec:commons-codec:1.10")
     compile("org.slf4j:slf4j-api:1.7.21")
 
+    compile group: 'com.datastax.cassandra', name: 'cassandra-driver-core', version: '3.5.1'
+    
     compileOnly("org.clojure:clojure:1.10.0")
 
     testCompile("org.clojure:clojure:1.10.0")
