@@ -27,10 +27,11 @@ import org.quartz.JobDataMap;
 
 public class JobDao implements GroupedDao{
     
+    private static final String ALLOW_FILTERING = " ALLOW FILTERING";
     public static final String TABLE_NAME_JOBS = "jobs";
 
     public static final String JOBS_GET_ALL = CassandraConnectionManager.registerStatement ("JOBS_GET_ALL", 
-            "SELECT * FROM " + TABLE_NAME_JOBS
+            "SELECT * FROM " + TABLE_NAME_JOBS + ALLOW_FILTERING
     );
     
     public static final String JOBS_DELETE_ALL = CassandraConnectionManager.registerStatement ("JOBS_DELETE_ALL", 
@@ -40,42 +41,42 @@ public class JobDao implements GroupedDao{
     public static final String JOBS_COUNT_BY_KEY = CassandraConnectionManager.registerStatement("JOBS_COUNT_BY_KEY",
             "SELECT COUNT(*) FROM " + TABLE_NAME_JOBS + " WHERE "
                     + KEY_NAME + " = ? AND "
-                    + KEY_GROUP + " = ? AND "
+                    + KEY_GROUP + " = ?" + ALLOW_FILTERING
     );
     
     public static final String JOBS_COUNT = CassandraConnectionManager.registerStatement("JOBS_COUNT",
-            "SELECT COUNT(*) FROM " + TABLE_NAME_JOBS
+            "SELECT COUNT(*) FROM " + TABLE_NAME_JOBS + ALLOW_FILTERING
     );
     
     public static final String JOBS_GET_BY_KEY_GROUP = CassandraConnectionManager.registerStatement("JOBS_GET_BY_KEY_GROUP",
             "SELECT * FROM " + TABLE_NAME_JOBS + " WHERE "
-                    + KEY_GROUP + " IN ?"
+                    + KEY_GROUP + " IN ?" + ALLOW_FILTERING
     );
     
     public static final String JOBS_GET_BY_KEY = CassandraConnectionManager.registerStatement("JOBS_GET_BY_KEY",
             "SELECT * FROM " + TABLE_NAME_JOBS + " WHERE "
                     + KEY_NAME + " = ? AND "
-                    + KEY_GROUP + " = ?"
+                    + KEY_GROUP + " = ?" + ALLOW_FILTERING
     );
     
     public static final String JOBS_GET_BY_JOB_ID = CassandraConnectionManager.registerStatement("JOBS_GET_BY_JOB_ID",
             "SELECT * FROM " + TABLE_NAME_JOBS + " WHERE "
-                    + JOB_ID + " = ?"
+                    + JOB_ID + " = ?" + ALLOW_FILTERING
     );
     
     public static final String JOBS_GET_DISTINCT_KEY_GROUP = CassandraConnectionManager.registerStatement("JOBS_GET_DISTINCT_KEY_GROUP",
-            "SELECT DISTINCT " + KEY_GROUP + " FROM " + TABLE_NAME_JOBS
+            "SELECT DISTINCT " + KEY_GROUP + " FROM " + TABLE_NAME_JOBS + ALLOW_FILTERING
     );
     
     public static final String JOBS_GET_BY_KEY_GROUP_LIKE = CassandraConnectionManager.registerStatement("JOBS_GET_BY_KEY_GROUP_LIKE",
             "SELECT * FROM " + TABLE_NAME_JOBS + " WHERE "
-                    + KEY_GROUP + "_index LIKE ?"
+                    + KEY_GROUP + "_index LIKE ?" + ALLOW_FILTERING
     );
         
     public static final String JOBS_DELETE_BY_KEY = CassandraConnectionManager.registerStatement("JOBS_DELETE_BY_KEY",
             "DELETE FROM " + TABLE_NAME_JOBS + " WHERE "
             + KEY_NAME + " = ? AND "
-            + KEY_GROUP + " = ?"
+            + KEY_GROUP + " = ?" + ALLOW_FILTERING
     );
 
     public static final String JOBS_INSERT_JOB_DATA = CassandraConnectionManager.registerStatement("JOBS_INSERT_JOB_DATA",

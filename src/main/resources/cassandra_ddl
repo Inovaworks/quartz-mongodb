@@ -19,12 +19,9 @@ CREATE TABLE IF NOT EXISTS quartz_nosql.jobs (
  jobDataPlain text,
  PRIMARY KEY ((keyGroup), keyName, jobId)
 );
-CREATE CUSTOM INDEX IF NOT EXISTS jobs_keyGroup_contains ON quartz_nosql.jobs (keyGroup_index)
- USING 'org.apache.cassandra.index.sasi.SASIIndex'
- WITH OPTIONS = { 'mode': 'CONTAINS' };
-	
-CREATE CUSTOM INDEX IF NOT EXISTS jobs_jobId ON quartz_nosql.jobs (jobId)
- USING 'org.apache.cassandra.index.sasi.SASIIndex';
+
+// CREATE INDEX IF NOT EXISTS ON quartz_nosql.jobs (keyGroup_index);
+// CREATE INDEX IF NOT EXISTS ON quartz_nosql.jobs (jobId);
 
 CREATE TABLE IF NOT EXISTS quartz_nosql.locks (
  keyName text,
@@ -36,12 +33,8 @@ CREATE TABLE IF NOT EXISTS quartz_nosql.locks (
  PRIMARY KEY ((keyGroup), keyName, type)
 );
 
-CREATE CUSTOM INDEX IF NOT EXISTS locks_instanceId ON quartz_nosql.locks (instanceId)
- USING 'org.apache.cassandra.index.sasi.SASIIndex';
-
-CREATE CUSTOM INDEX IF NOT EXISTS locks_keyGroup_contains ON quartz_nosql.locks (keyGroup_index)
- USING 'org.apache.cassandra.index.sasi.SASIIndex'
- WITH OPTIONS = { 'mode': 'CONTAINS' };
+CREATE INDEX IF NOT EXISTS ON quartz_nosql.locks (instanceId);
+CREATE INDEX IF NOT EXISTS ON quartz_nosql.locks (keyGroup_index);
 
 CREATE TABLE IF NOT EXISTS quartz_nosql.paused_job_groups (
  keyGroup text,
@@ -49,9 +42,7 @@ CREATE TABLE IF NOT EXISTS quartz_nosql.paused_job_groups (
  PRIMARY KEY (keyGroup)
 );
 
-CREATE CUSTOM INDEX IF NOT EXISTS paused_job_groups_keyGroup_contains ON quartz_nosql.paused_job_groups (keyGroup_index)
- USING 'org.apache.cassandra.index.sasi.SASIIndex'
- WITH OPTIONS = { 'mode': 'CONTAINS' };
+// CREATE INDEX IF NOT EXISTS ON quartz_nosql.paused_job_groups (keyGroup_index);
 
 CREATE TABLE IF NOT EXISTS quartz_nosql.paused_trigger_groups (
  keyGroup text,
@@ -59,9 +50,7 @@ CREATE TABLE IF NOT EXISTS quartz_nosql.paused_trigger_groups (
  PRIMARY KEY (keyGroup)
 );
 
-CREATE CUSTOM INDEX IF NOT EXISTS paused_trigger_groups_keyGroup_contains ON quartz_nosql.paused_trigger_groups (keyGroup_index)
- USING 'org.apache.cassandra.index.sasi.SASIIndex'
- WITH OPTIONS = { 'mode': 'CONTAINS' };
+CREATE INDEX IF NOT EXISTS ON quartz_nosql.paused_trigger_groups (keyGroup_index);
 
 CREATE TABLE IF NOT EXISTS quartz_nosql.schedulers (
  schedulerName text,
@@ -101,9 +90,5 @@ CREATE TABLE IF NOT EXISTS quartz_nosql.triggers (
  PRIMARY KEY ((keyGroup), keyName)
 );
 
-CREATE CUSTOM INDEX IF NOT EXISTS triggers_keyGroup_contains ON quartz_nosql.triggers (keyGroup_index)
-	USING 'org.apache.cassandra.index.sasi.SASIIndex'
-	WITH OPTIONS = { 'mode': 'CONTAINS' };
-	
-CREATE CUSTOM INDEX IF NOT EXISTS triggers_jobId ON quartz_nosql.triggers (jobId)
-	USING 'org.apache.cassandra.index.sasi.SASIIndex';
+// CREATE INDEX IF NOT EXISTS ON quartz_nosql.triggers (keyGroup_index);
+// CREATE INDEX IF NOT EXISTS ON quartz_nosql.triggers (jobId);

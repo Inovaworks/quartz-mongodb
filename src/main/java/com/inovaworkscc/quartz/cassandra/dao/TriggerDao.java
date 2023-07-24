@@ -36,10 +36,11 @@ import java.util.HashMap;
 
 public class TriggerDao implements GroupedDao{
 
+    private static final String ALLOW_FILTERING = " ALLOW FILTERING";
     public static final String TABLE_NAME_TRIGGERS = "triggers";
 
     public static final String TRIGGERS_GET_ALL = CassandraConnectionManager.registerStatement ("TRIGGERS_GET_ALL", 
-            "SELECT * FROM " + TABLE_NAME_TRIGGERS
+            "SELECT * FROM " + TABLE_NAME_TRIGGERS + ALLOW_FILTERING
     );
     
     
@@ -48,41 +49,41 @@ public class TriggerDao implements GroupedDao{
     );
     
     public static final String TRIGGERS_COUNT = CassandraConnectionManager.registerStatement("TRIGGERS_COUNT",
-            "SELECT COUNT(*) FROM " + TABLE_NAME_TRIGGERS
+            "SELECT COUNT(*) FROM " + TABLE_NAME_TRIGGERS + ALLOW_FILTERING
     );
     
     public static final String TRIGGERS_GET_DISTINCT_KEY_GROUP = CassandraConnectionManager.registerStatement("TRIGGERS_GET_DISTINCT_KEY_GROUP",
-            "SELECT DISTINCT " + KEY_GROUP + " FROM " + TABLE_NAME_TRIGGERS
+            "SELECT DISTINCT " + KEY_GROUP + " FROM " + TABLE_NAME_TRIGGERS + ALLOW_FILTERING
     );
     
     public static final String TRIGGERS_GET_KEY_NAME = CassandraConnectionManager.registerStatement("TRIGGERS_GET_KEY_NAME",
             "SELECT " + KEY_NAME + " FROM " + TABLE_NAME_TRIGGERS + " WHERE "
-                    + KEY_GROUP + " = ?"
+                    + KEY_GROUP + " = ?" + ALLOW_FILTERING
     );
     
     public static final String TRIGGERS_GET_BY_KEY = CassandraConnectionManager.registerStatement("TRIGGERS_GET_BY_KEY",
             "SELECT * FROM " + TABLE_NAME_TRIGGERS + " WHERE "
                     + KEY_NAME + " = ? AND "
-                    + KEY_GROUP + " = ?"
+                    + KEY_GROUP + " = ?" + ALLOW_FILTERING
     );
     
     public static final String TRIGGERS_GET_BY_JOB_ID = CassandraConnectionManager.registerStatement("TRIGGERS_GET_BY_JOB_ID",
             "SELECT * FROM " + TABLE_NAME_TRIGGERS + " WHERE "
-                    + Constants.TRIGGER_JOB_ID + " = ?"
+                    + Constants.TRIGGER_JOB_ID + " = ?" + ALLOW_FILTERING
     );
     public static final String TRIGGERS_GET_KEY_BY_JOB_ID = CassandraConnectionManager.registerStatement("TRIGGERS_GET_KEY_BY_JOB_ID",
             "SELECT " + KEY_NAME + "," + KEY_GROUP + " FROM " + TABLE_NAME_TRIGGERS + " WHERE "
-                    + Constants.TRIGGER_JOB_ID + " = ?"
+                    + Constants.TRIGGER_JOB_ID + " = ?" + ALLOW_FILTERING
     );
     
     public static final String TRIGGERS_GET_KEY_IN_JOB_ID = CassandraConnectionManager.registerStatement("TRIGGERS_GET_KEY_IN_JOB_ID",
             "SELECT " + KEY_NAME + "," + KEY_GROUP + " FROM " + TABLE_NAME_TRIGGERS + " WHERE "
-                    + Constants.TRIGGER_JOB_ID + " IN ?"
+                    + Constants.TRIGGER_JOB_ID + " IN ?" + ALLOW_FILTERING
     );
     
     public static final String TRIGGERS_GET_BY_KEY_GROUP_LIKE = CassandraConnectionManager.registerStatement("TRIGGERS_GET_BY_KEY_GROUP_LIKE",
             "SELECT " + KEY_NAME + "," + KEY_GROUP + " FROM " + TABLE_NAME_TRIGGERS + " WHERE "
-                    + KEY_GROUP + "_index LIKE ?"
+                    + KEY_GROUP + "_index LIKE ?" + ALLOW_FILTERING
     );
     
     public static final String TRIGGERS_INSERT = CassandraConnectionManager.registerStatement("TRIGGERS_INSERT",
@@ -169,7 +170,7 @@ public class TriggerDao implements GroupedDao{
                 + SimpleTriggerPropertiesConverter.TRIGGER_REPEAT_COUNT + " = ? "
                 + "WHERE "
                 + KEY_NAME + " = ? AND "
-                + KEY_GROUP + " = ?"
+                + KEY_GROUP + " = ?" + ALLOW_FILTERING
     );
     
     public static final String TRIGGERS_UPDATE_STATE = CassandraConnectionManager.registerStatement("TRIGGERS_UPDATE_STATE",
@@ -178,7 +179,7 @@ public class TriggerDao implements GroupedDao{
                 + "WHERE "
                 + KEY_NAME + " = ? AND "
                 + KEY_GROUP + " = ? "
-                + "IF EXISTS"
+                + "IF EXISTS" + ALLOW_FILTERING
     );
     
     public static final String TRIGGERS_UPSERT_STATE = CassandraConnectionManager.registerStatement("TRIGGERS_UPSERT_STATE",
@@ -186,7 +187,7 @@ public class TriggerDao implements GroupedDao{
                 + Constants.TRIGGER_STATE + " = ? "
                 + "WHERE "
                 + KEY_NAME + " = ? AND "
-                + KEY_GROUP + " = ?"
+                + KEY_GROUP + " = ?" + ALLOW_FILTERING
     );
     
     public static final String TRIGGERS_UPDATE_STATE_IN_NAME = CassandraConnectionManager.registerStatement("TRIGGERS_UPDATE_STATE_IN_NAME",
@@ -194,18 +195,18 @@ public class TriggerDao implements GroupedDao{
                 + Constants.TRIGGER_STATE + " = ? "
                 + "WHERE "
                 + KEY_NAME + " IN ? AND "
-                + KEY_GROUP + " = ?"
+                + KEY_GROUP + " = ?" + ALLOW_FILTERING
     );
     
     public static final String TRIGGERS_DELETE_BY_KEY = CassandraConnectionManager.registerStatement("TRIGGERS_DELETE_BY_KEY",
             "DELETE FROM " + TABLE_NAME_TRIGGERS + " WHERE "
             + KEY_NAME + " = ? AND "
-            + KEY_GROUP + " = ?"
+            + KEY_GROUP + " = ?" + ALLOW_FILTERING
     );
     
     public static final String TRIGGERS_GET_BY_KEY_GROUP = CassandraConnectionManager.registerStatement("TRIGGERS_GET_BY_KEY_GROUP",
             "SELECT * FROM " + TABLE_NAME_TRIGGERS + " WHERE "
-                    + KEY_GROUP + " IN ?"
+                    + KEY_GROUP + " IN ?" + ALLOW_FILTERING
     );
     
     private QueryHelper queryHelper;

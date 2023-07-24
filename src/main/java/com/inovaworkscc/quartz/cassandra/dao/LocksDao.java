@@ -28,30 +28,31 @@ import org.quartz.utils.Key;
 
 public class LocksDao implements GroupedDao{
 
+    private static final String ALLOW_FILTERING = " ALLOW FILTERING";
     private static final Logger LOG = LoggerFactory.getLogger(LocksDao.class);
 
     public static final String TABLE_NAME_LOCKS = "locks";
     
     public static final String LOCKS_GET_ALL = CassandraConnectionManager.registerStatement ("LOCKS_GET_ALL", 
-            "SELECT * FROM " + TABLE_NAME_LOCKS
+            "SELECT * FROM " + TABLE_NAME_LOCKS + ALLOW_FILTERING
     );
     
     public static final String LOCKS_GET_BY_KEY_LOCK_TYPE = CassandraConnectionManager.registerStatement("LOCKS_GET_BY_KEY_LOCK_TYPE",
             "SELECT * FROM " + TABLE_NAME_LOCKS + " WHERE "
                     + KEY_NAME + " = ? AND "
                     + KEY_GROUP + " = ? AND"
-                    + LOCK_TYPE + " = ?"
+                    + LOCK_TYPE + " = ?" + ALLOW_FILTERING
     );
     
     public static final String LOCKS_GET_BY_KEY = CassandraConnectionManager.registerStatement("LOCKS_GET_BY_KEY",
             "SELECT * FROM " + TABLE_NAME_LOCKS + " WHERE "
                     + KEY_NAME + " = ? AND "
-                    + KEY_GROUP + " = ?"
+                    + KEY_GROUP + " = ?" + ALLOW_FILTERING
     );
     
     public static final String LOCKS_GET_BY_INSTANCE_ID = CassandraConnectionManager.registerStatement("LOCKS_GET_BY_INSTANCE_ID",
             "SELECT " + KEY_NAME + "," + KEY_GROUP + "," + LOCK_TYPE + " FROM " + TABLE_NAME_LOCKS + " WHERE "
-                    + LOCK_INSTANCE_ID + " = ? "
+                    + LOCK_INSTANCE_ID + " = ? " + ALLOW_FILTERING
     );
     
     public static final String LOCKS_INSERT = CassandraConnectionManager.registerStatement("LOCKS_INSERT",
@@ -72,28 +73,28 @@ public class LocksDao implements GroupedDao{
                 + KEY_NAME + " = ? AND "
                 + KEY_GROUP + " = ? AND "
                 + LOCK_TYPE + " = ? "
-                + "IF EXISTS"
+                + "IF EXISTS" + ALLOW_FILTERING
     );
     
     public static final String LOCKS_DELETE = CassandraConnectionManager.registerStatement("LOCKS_DELETE",
         "DELETE FROM " + TABLE_NAME_LOCKS + " WHERE "
             + KEY_NAME + " = ? AND "
             + KEY_GROUP + " = ? AND "
-            + LOCK_TYPE + " = ? "
+            + LOCK_TYPE + " = ? " + ALLOW_FILTERING
     );
     
     public static final String LOCKS_GET_DISTINCT_KEY_GROUP = CassandraConnectionManager.registerStatement("LOCKS_GET_DISTINCT_KEY_GROUP",
-            "SELECT DISTINCT " + KEY_GROUP + " FROM " + TABLE_NAME_LOCKS
+            "SELECT DISTINCT " + KEY_GROUP + " FROM " + TABLE_NAME_LOCKS + ALLOW_FILTERING
     );
     
     public static final String LOCKS_GET_BY_KEY_GROUP = CassandraConnectionManager.registerStatement("LOCKS_GET_BY_KEY_GROUP",
             "SELECT * FROM " + TABLE_NAME_LOCKS + " WHERE "
-                    + KEY_GROUP + " IN ?"
+                    + KEY_GROUP + " IN ?" + ALLOW_FILTERING
     );
     
     public static final String LOCKS_GET_BY_KEY_GROUP_LIKE = CassandraConnectionManager.registerStatement("LOCKS_GET_BY_KEY_GROUP_LIKE",
             "SELECT * FROM " + TABLE_NAME_LOCKS + " WHERE "
-                    + KEY_GROUP + "_index LIKE ?"
+                    + KEY_GROUP + "_index LIKE ?" + ALLOW_FILTERING
     );
      
     private final Clock clock;

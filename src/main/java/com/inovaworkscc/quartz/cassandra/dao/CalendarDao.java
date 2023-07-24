@@ -16,22 +16,23 @@ import java.util.List;
 
 public class CalendarDao {
 
+    private static final String ALLOW_FILTERING = " ALLOW FILTERING";
     public static final String TABLE_NAME_CALENDARS = "calendars";
 
     static final String CALENDAR_NAME = "name";
     static final String CALENDAR_SERIALIZED_OBJECT = "serializedObject";
     
     public static final String CALENDARS_GET_ALL = CassandraConnectionManager.registerStatement ("CALENDARS_GET_ALL", 
-             "SELECT * FROM " + TABLE_NAME_CALENDARS
+             "SELECT * FROM " + TABLE_NAME_CALENDARS + ALLOW_FILTERING
     );
     
     public static final String CALENDARS_GET_ALL_NAMES = CassandraConnectionManager.registerStatement ("CALENDARS_GET_ALL_NAMES", 
-             "SELECT " + CALENDAR_NAME + " FROM " + TABLE_NAME_CALENDARS
+             "SELECT " + CALENDAR_NAME + " FROM " + TABLE_NAME_CALENDARS + ALLOW_FILTERING
     );
     
     public static final String CALENDARS_GET = CassandraConnectionManager.registerStatement("CALENDARS_GET",
             "SELECT * FROM " + TABLE_NAME_CALENDARS + " WHERE "
-            + CALENDAR_NAME + " = ?"
+            + CALENDAR_NAME + " = ?" + ALLOW_FILTERING
     );
     
     public static final String CALENDARS_INSERT = CassandraConnectionManager.registerStatement("CALENDARS_INSERT",
@@ -46,11 +47,11 @@ public class CalendarDao {
     
     public static final String CALENDARS_DELETE = CassandraConnectionManager.registerStatement("CALENDARS_DELETE",
             "DELETE FROM " + TABLE_NAME_CALENDARS + " WHERE "
-            + CALENDAR_NAME + " = ?"
+            + CALENDAR_NAME + " = ?" + ALLOW_FILTERING
     );
     
     public static final String CALENDARS_COUNT = CassandraConnectionManager.registerStatement("CALENDARS_COUNT",
-            "SELECT COUNT(*) FROM " + TABLE_NAME_CALENDARS
+            "SELECT COUNT(*) FROM " + TABLE_NAME_CALENDARS + ALLOW_FILTERING
     );
     
     public CalendarDao() {}

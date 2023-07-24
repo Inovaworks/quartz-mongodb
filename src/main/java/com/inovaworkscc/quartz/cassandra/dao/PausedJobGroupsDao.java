@@ -13,11 +13,12 @@ import java.util.List;
 import java.util.Set;
 
 public class PausedJobGroupsDao implements GroupedDao{
-
+    
+    private static final String ALLOW_FILTERING = " ALLOW FILTERING";
     public static final String TABLE_NAME_PAUSED_JOB_GROUPS = "paused_job_groups";
         
     public static final String PAUSED_JOB_GROUPS_GET_ALL = CassandraConnectionManager.registerStatement ("PAUSED_JOB_GROUPS_GET_ALL", 
-             "SELECT * FROM " + TABLE_NAME_PAUSED_JOB_GROUPS
+             "SELECT * FROM " + TABLE_NAME_PAUSED_JOB_GROUPS + ALLOW_FILTERING
     );
     
     public static final String PAUSED_JOB_GROUPS_INSERT = CassandraConnectionManager.registerStatement("PAUSED_JOB_GROUPS_INSERT",
@@ -31,21 +32,21 @@ public class PausedJobGroupsDao implements GroupedDao{
     
     public static final String PAUSED_JOB_GROUPS_DELETE_MANY = CassandraConnectionManager.registerStatement("PAUSED_JOB_GROUPS_DELETE",
             "DELETE FROM " + TABLE_NAME_PAUSED_JOB_GROUPS + " WHERE "
-            + KEY_GROUP + " IN ?"
+            + KEY_GROUP + " IN ?" + ALLOW_FILTERING
     );
     
     public static final String PAUSED_JOB_GROUPS_GET_DISTINCT_KEY_GROUP = CassandraConnectionManager.registerStatement("PAUSED_JOB_GROUPS_GET_DISTINCT_KEY_GROUP",
-            "SELECT DISTINCT " + KEY_GROUP + " FROM " + TABLE_NAME_PAUSED_JOB_GROUPS
+            "SELECT DISTINCT " + KEY_GROUP + " FROM " + TABLE_NAME_PAUSED_JOB_GROUPS + ALLOW_FILTERING
     );
     
     public static final String PAUSED_JOB_GROUPS_GET_BY_KEY_GROUP = CassandraConnectionManager.registerStatement("PAUSED_JOB_GROUPS_GET_BY_KEY_GROUP",
             "SELECT * FROM " + TABLE_NAME_PAUSED_JOB_GROUPS + " WHERE "
-                    + KEY_GROUP + " IN ?"
+                    + KEY_GROUP + " IN ?" + ALLOW_FILTERING
     );
     
     public static final String PAUSED_JOB_GROUPS_GET_BY_KEY_GROUP_LIKE = CassandraConnectionManager.registerStatement("PAUSED_JOB_GROUPS_GET_BY_KEY_GROUP_LIKE",
             "SELECT * FROM " + TABLE_NAME_PAUSED_JOB_GROUPS + " WHERE "
-                    + KEY_GROUP + "_index LIKE ?"
+                    + KEY_GROUP + "_index LIKE ?" + ALLOW_FILTERING
     );
     
     public PausedJobGroupsDao() {}

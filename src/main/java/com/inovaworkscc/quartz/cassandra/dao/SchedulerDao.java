@@ -17,7 +17,7 @@ import com.inovaworkscc.quartz.cassandra.util.Clock;
 public class SchedulerDao {
 
     private static final Logger LOG = LoggerFactory.getLogger(SchedulerDao.class);
-
+    private static final String ALLOW_FILTERING = " ALLOW FILTERING";
     public static final String TABLE_NAME_SCHEDULERS = "paused_trigger_groups";
     
     public static final String SCHEDULER_NAME_FIELD = "schedulerName";
@@ -26,7 +26,7 @@ public class SchedulerDao {
     public static final String CHECKIN_INTERVAL_FIELD = "checkinInterval";
     
     public static final String SCHEDULERS_GET_ALL = CassandraConnectionManager.registerStatement ("SCHEDULERS_GET_ALL", 
-            "SELECT * FROM " + TABLE_NAME_SCHEDULERS
+            "SELECT * FROM " + TABLE_NAME_SCHEDULERS + ALLOW_FILTERING
     );
     
     public static final String SCHEDULERS_INSERT = CassandraConnectionManager.registerStatement("SCHEDULERS_INSERT",
@@ -43,19 +43,19 @@ public class SchedulerDao {
                 + CHECKIN_INTERVAL_FIELD + " = ? "
                 + "WHERE "
                 + SCHEDULER_NAME_FIELD + " = ? AND "
-                + INSTANCE_ID_FIELD + " = ?"
+                + INSTANCE_ID_FIELD + " = ?" + ALLOW_FILTERING
     );
     
      public static final String SCHEDULERS_GET_BY_NAME_INSTANCE_ID = CassandraConnectionManager.registerStatement("SCHEDULERS_GET_BY_NAME_INSTANCE_ID",
             "SELECT * FROM " + TABLE_NAME_SCHEDULERS + " WHERE "
                     + SCHEDULER_NAME_FIELD + " = ? AND "
-                    + INSTANCE_ID_FIELD + " = ?"
+                    + INSTANCE_ID_FIELD + " = ?" + ALLOW_FILTERING
     );
     
     public static final String SCHEDULERS_DELETE = CassandraConnectionManager.registerStatement("SCHEDULERS_DELETE",
             "DELETE FROM " + TABLE_NAME_SCHEDULERS + " WHERE "
             + SCHEDULER_NAME_FIELD + " = ? AND "
-            + INSTANCE_ID_FIELD + " = ?"
+            + INSTANCE_ID_FIELD + " = ?" + ALLOW_FILTERING
     );
      
     public final String schedulerName;

@@ -14,10 +14,11 @@ import java.util.Set;
 
 public class PausedTriggerGroupsDao implements GroupedDao{
 
+    private static final String ALLOW_FILTERING = " ALLOW FILTERING";
     public static final String TABLE_NAME_PAUSED_TRIGGER_GROUPS = "paused_trigger_groups";
         
     public static final String PAUSED_TRIGGER_GROUPS_GET_ALL = CassandraConnectionManager.registerStatement ("PAUSED_TRIGGER_GROUPS_GET_ALL", 
-            "SELECT * FROM " + TABLE_NAME_PAUSED_TRIGGER_GROUPS
+            "SELECT * FROM " + TABLE_NAME_PAUSED_TRIGGER_GROUPS + ALLOW_FILTERING
     );
     
     public static final String PAUSED_TRIGGER_GROUPS_INSERT = CassandraConnectionManager.registerStatement("PAUSED_TRIGGER_GROUPS_INSERT",
@@ -31,7 +32,7 @@ public class PausedTriggerGroupsDao implements GroupedDao{
     
     public static final String PAUSED_TRIGGER_GROUPS_DELETE_MANY = CassandraConnectionManager.registerStatement("PAUSED_TRIGGER_GROUPS_DELETE_MANY",
             "DELETE FROM " + TABLE_NAME_PAUSED_TRIGGER_GROUPS + " WHERE "
-            + KEY_GROUP + " IN ?"
+            + KEY_GROUP + " IN ?" + ALLOW_FILTERING
     );
     
     public static final String PAUSED_TRIGGER_GROUPS_GET_DISTINCT_KEY_GROUP = CassandraConnectionManager.registerStatement("PAUSED_TRIGGER_GROUPS_GET_DISTINCT_KEY_GROUP",
@@ -40,12 +41,12 @@ public class PausedTriggerGroupsDao implements GroupedDao{
     
     public static final String PAUSED_TRIGGER_GROUPS_GET_BY_KEY_GROUP = CassandraConnectionManager.registerStatement("PAUSED_TRIGGER_GROUPS_GET_BY_KEY_GROUP",
             "SELECT * FROM " + TABLE_NAME_PAUSED_TRIGGER_GROUPS + " WHERE "
-                    + KEY_GROUP + " IN ?"
+                    + KEY_GROUP + " IN ?" + ALLOW_FILTERING
     );
     
     public static final String PAUSED_TRIGGER_GROUPS_GET_BY_KEY_GROUP_LIKE = CassandraConnectionManager.registerStatement("PAUSED_TRIGGER_GROUPS_GET_BY_KEY_GROUP_LIKE",
             "SELECT * FROM " + TABLE_NAME_PAUSED_TRIGGER_GROUPS + " WHERE "
-                    + KEY_GROUP + "_index LIKE ?"
+                    + KEY_GROUP + "_index LIKE ?" + ALLOW_FILTERING
     );
     
     public PausedTriggerGroupsDao() {}
