@@ -76,7 +76,7 @@ public class JobDao implements GroupedDao{
     public static final String JOBS_DELETE_BY_KEY = CassandraConnectionManager.registerStatement("JOBS_DELETE_BY_KEY",
             "DELETE FROM " + TABLE_NAME_JOBS + " WHERE "
             + KEY_NAME + " = ? AND "
-            + KEY_GROUP + " = ?" + ALLOW_FILTERING
+            + KEY_GROUP + " = ?"
     );
 
     public static final String JOBS_INSERT_JOB_DATA = CassandraConnectionManager.registerStatement("JOBS_INSERT_JOB_DATA",

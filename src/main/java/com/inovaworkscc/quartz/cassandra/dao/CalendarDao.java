@@ -47,7 +47,7 @@ public class CalendarDao {
     
     public static final String CALENDARS_DELETE = CassandraConnectionManager.registerStatement("CALENDARS_DELETE",
             "DELETE FROM " + TABLE_NAME_CALENDARS + " WHERE "
-            + CALENDAR_NAME + " = ?" + ALLOW_FILTERING
+            + CALENDAR_NAME + " = ?"
     );
     
     public static final String CALENDARS_COUNT = CassandraConnectionManager.registerStatement("CALENDARS_COUNT",

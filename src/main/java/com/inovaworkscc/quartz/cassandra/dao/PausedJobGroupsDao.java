@@ -32,7 +32,7 @@ public class PausedJobGroupsDao implements GroupedDao{
     
     public static final String PAUSED_JOB_GROUPS_DELETE_MANY = CassandraConnectionManager.registerStatement("PAUSED_JOB_GROUPS_DELETE",
             "DELETE FROM " + TABLE_NAME_PAUSED_JOB_GROUPS + " WHERE "
-            + KEY_GROUP + " IN ?" + ALLOW_FILTERING
+            + KEY_GROUP + " IN ?"
     );
     
     public static final String PAUSED_JOB_GROUPS_GET_DISTINCT_KEY_GROUP = CassandraConnectionManager.registerStatement("PAUSED_JOB_GROUPS_GET_DISTINCT_KEY_GROUP",

@@ -80,7 +80,7 @@ public class LocksDao implements GroupedDao{
         "DELETE FROM " + TABLE_NAME_LOCKS + " WHERE "
             + KEY_NAME + " = ? AND "
             + KEY_GROUP + " = ? AND "
-            + LOCK_TYPE + " = ? " + ALLOW_FILTERING
+            + LOCK_TYPE + " = ? "
     );
     
     public static final String LOCKS_GET_DISTINCT_KEY_GROUP = CassandraConnectionManager.registerStatement("LOCKS_GET_DISTINCT_KEY_GROUP",

@@ -55,7 +55,7 @@ public class SchedulerDao {
     public static final String SCHEDULERS_DELETE = CassandraConnectionManager.registerStatement("SCHEDULERS_DELETE",
             "DELETE FROM " + TABLE_NAME_SCHEDULERS + " WHERE "
             + SCHEDULER_NAME_FIELD + " = ? AND "
-            + INSTANCE_ID_FIELD + " = ?" + ALLOW_FILTERING
+            + INSTANCE_ID_FIELD + " = ?"
     );
      
     public final String schedulerName;

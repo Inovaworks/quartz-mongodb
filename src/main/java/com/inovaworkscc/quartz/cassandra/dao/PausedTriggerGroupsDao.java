@@ -32,7 +32,7 @@ public class PausedTriggerGroupsDao implements GroupedDao{
     
     public static final String PAUSED_TRIGGER_GROUPS_DELETE_MANY = CassandraConnectionManager.registerStatement("PAUSED_TRIGGER_GROUPS_DELETE_MANY",
             "DELETE FROM " + TABLE_NAME_PAUSED_TRIGGER_GROUPS + " WHERE "
-            + KEY_GROUP + " IN ?" + ALLOW_FILTERING
+            + KEY_GROUP + " IN ?"
     );
     
     public static final String PAUSED_TRIGGER_GROUPS_GET_DISTINCT_KEY_GROUP = CassandraConnectionManager.registerStatement("PAUSED_TRIGGER_GROUPS_GET_DISTINCT_KEY_GROUP",
